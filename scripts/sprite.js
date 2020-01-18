@@ -1,13 +1,17 @@
+const parser = new DOMParser();
 const s = new XMLSerializer()
 
 class Sprite {
     constructor(string) {
         this.parseSVG(string)
         this.image = this.draw(string)
+        this.animations = {}
+        this.animFrame = 0
+        this.animKey = 0
+        this.animate = false
     }
     parseSVG = (string) => {
         let paths = {}
-        const parser = new DOMParser();
         this.xmlDoc = parser.parseFromString(string, "text/xml");
         let xmlPaths = this.xmlDoc.getElementsByTagName('path')
         for (let i = 0; i < xmlPaths.length; i++) {
@@ -17,13 +21,13 @@ class Sprite {
             for (let ch of current) {
                 if (ch == 'M' || ch == 'm' || ch == 'L' || ch == 'l' || ch == 'H' || ch == 'h' || ch == 'V' || ch == 'v' || ch == 'Z' || ch == 'z' || ch == ',' || ch == ' ' || ch == 'C' || ch == 'c' || ch == 'S' || ch == 's') {
                     if (val.length > 0) {
-                        key.push({number: true, value: val})
+                        key.push({ number: true, value: val })
                         val = ''
                     }
-                    key.push({number: false, value: ch})
+                    key.push({ number: false, value: ch })
                 } else if (ch == '-') {
                     if (val.length > 0) {
-                        key.push({number: true, value: val})
+                        key.push({ number: true, value: val })
                         val = ch
                     }
                 } else {
@@ -53,7 +57,7 @@ class Sprite {
         image.src = url
         image.onload = () => {
             ctx.drawImage(image, this.x, this.y)
-        } 
+        }
         return image
     }
     updatePath = (path) => {
@@ -65,5 +69,59 @@ class Sprite {
     }
     updateImage = () => {
         this.draw(s.serializeToString(this.xmlDoc))
+    }
+    newAnimation = (name, length = 1000) => {
+        this.animations[name] = {
+            length: length,
+            keyframes: [{ timestamp: 0, paths: JSON.parse(JSON.stringify(this.paths)) }],
+        }
+    }
+    addKeyFrame = (animation, timestamp) => {
+        animation.keyframes.push({ timestamp: timestamp, paths: JSON.parse(JSON.stringify(this.paths)) })
+        animation.keyframes = this.orderKeyFrames(animation.keyframes)
+    }
+    orderKeyFrames = (frames) => {
+        if (frames.length < 2) {
+            return frames
+        }
+        let more = []
+        let less = []
+        let pivot = frames[0]
+        for (let i = 1; i < frames.length; i++) {
+            if (frames[i].timestamp <= pivot.timestamp) {
+                less.push(frames[i])
+            } else {
+                more.push[frames[i]]
+            }
+        }
+        return this.orderKeyFrames(less).push(pivot).concat(this.orderKeyFrames(more))
+    }
+    playback = (animation) => {
+        this.currentAnim = animation
+        this.animFrame = 0
+        this.animKey = 0
+        this.animate = true
+    }
+    nextFrame = () => {
+        if (this.animate) {
+            this.updateImage()
+            if (this.animFrame == this.currentAnim.keyframes[animKey].timestamp) {
+                this.animKey++
+            }
+            let steps = this.currentAnim.keyframes[animKey].timestamp - this.animFrame
+            for (path in this.paths) {
+                let current = this.paths[path]
+                for (let i = 0; i < current.length; i++) {
+                    if (current[i].number) {
+                        let diff = this.currentAnim.keyframes[animKey].paths[i].value - current[i].value
+                        current[i].value += (diff / steps)
+                    }
+                }
+                this.updatePath(path)
+            }
+            if (this.currentAnim.length == this.animFrame) {
+                this.animate == false
+            }
+        }
     }
 }
