@@ -1,0 +1,35 @@
+*{
+    margin: 0px;
+    padding: 0px;
+}
+
+header {
+    position: fixed;
+    height: 10%;
+    left: 0px;
+    width: 100%;
+    background-color: black;
+    color: slategray;
+    font-family: sans-serif;
+    font-weight: bold;
+}
+
+aside{
+    position: fixed;
+    height: 90%;
+    top: 10%;
+    width: 20%;
+    right: 0px;
+    background-color: teal;
+    color: palevioletred;
+    font-family: sans-serif;
+    font-weight: bold;
+}
+
+#canvas{
+    position: fixed;
+    top: 10%;
+    left: 0px;
+    width: 80%;
+    height: 90%;
+}

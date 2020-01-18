@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="style.css">
+    <title>Editor</title>
+</head>
+<body>
+    <header>
+        <form onsubmit="getSVG();return false">
+            <label for="svg">Choose SVG</label>
+            <input type="file" accept=".svg" name="file" id="file">
+            <button type="submit">Load SVG</button>
+        </form>
+    </header>
+    <aside>
+
+    </aside>
+    <canvas id="canvas"></canvas>
+    <script src="./scripts/sprite.js"></script>
+    <script src="./scripts/master.js"></script>
+</body>
+</html>
