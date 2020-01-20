@@ -4,11 +4,12 @@ const s = new XMLSerializer()
 class Sprite {
     constructor(string) {
         this.parseSVG(string)
-        this.image = this.draw(string)
+        this.image = this.updateImage(string)
         this.animations = {}
         this.animFrame = 0
         this.animKey = 0
         this.animate = false
+        this.originalPaths = JSON.parse(JSON.stringify(this.paths))
     }
     parseSVG = (string) => {
         let paths = {}
@@ -47,18 +48,19 @@ class Sprite {
         this.x = xstring.slice(0, xstring.length - 2)
         this.y = ystring.slice(0, ystring.length - 2)
     }
-    // displaySVG = () => {
-    //     ctx.drawImage(this.image, this.x, this.y)
-    // }
-    draw = (string) => {
-        const blob = new Blob([string], { type: 'image/svg+xml' })
-        const url = window.URL.createObjectURL(blob)
-        const image = new Image(this.width, this.height)
-        image.src = url
-        image.onload = () => {
-            ctx.drawImage(image, this.x, this.y)
-        }
-        return image
+    getSVG = () => {
+        return new Promise((resolve, reject) => {
+            for (let i = 0; i < this.paths.length; i++) {
+                this.updatePath(i)
+            }
+            const blob = new Blob([s.serializeToString(this.xmlDoc)], { type: 'image/svg+xml' })
+            const url = window.URL.createObjectURL(blob)
+            const image = new Image(this.width, this.height)
+            image.src = url
+            image.onload = () => {
+                return resolve({ image: image, x: this.x, y: this.y })
+            }
+        })
     }
     updatePath = (path) => {
         let string = ''
@@ -68,7 +70,11 @@ class Sprite {
         this.xmlDoc.getElementsByTagName('path')[path].setAttribute('d', string)
     }
     updateImage = () => {
-        this.draw(s.serializeToString(this.xmlDoc))
+        const blob = new Blob([s.serializeToString(this.xmlDoc)], { type: 'image/svg+xml' })
+        const url = window.URL.createObjectURL(blob)
+        const image = new Image(this.width, this.height)
+        image.src = url
+        return image
     }
     newAnimation = (name, length = 1000) => {
         this.animations[name] = {
@@ -121,7 +127,10 @@ class Sprite {
             }
             if (this.currentAnim.length == this.animFrame) {
                 this.animate == false
+                this.paths = this.originalPaths
             }
+        } else {
+            this.updateImage()
         }
     }
 }
