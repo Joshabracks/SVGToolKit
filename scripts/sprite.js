@@ -92,7 +92,7 @@ class Sprite {
         })
     }
     addKeyFrame = (animation, timestamp) => {
-        this.animations[animation].keyframes.push({ timestamp: timestamp, paths: JSON.parse(JSON.stringify(this.paths)) })
+        this.animations[animation].keyframes.push({ timestamp: parseInt(timestamp), paths: JSON.parse(JSON.stringify(this.paths)) })
         let kf = this.orderKeyFrames(this.animations[animation].keyframes)
         return this.animations[animation]
     }
@@ -103,18 +103,17 @@ class Sprite {
         let more = []
         let less = []
         let pivot = frames[0]
-        for (let i = 1; i < frames.length; i++) {
-            if (frames[i].timestamp <= pivot.timestamp) {
-                less.push(frames[i])
-            } else {
-                more.push[frames[i]]
+        for (let frame of frames) {
+            if (frame.timestamp > pivot.timestamp) {
+                more.push(frame)
+            } else if (frame.timestamp < pivot.timestamp){
+                less.push(frame)
+            } else if (frame.timestamp == pivot.timestamp) {
+                pivot = frame
             }
         }
-        less = this.orderKeyFrames(less)
-        less.push(pivot)
-        more = this.orderKeyFrames(more)
-        less.concat(more)
-        return less
+        pivot = [pivot]
+        return this.orderKeyFrames(less).concat(pivot).concat(this.orderKeyFrames(more))
     }
     playback = (animation) => {
         this.currentAnim = animation

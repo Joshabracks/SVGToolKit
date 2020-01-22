@@ -98,6 +98,17 @@ function loadAnimation(anim) {
 function loadFrame(ts) {
     let slider = document.getElementById('animSlider')
     slider.value = ts;
+    for (let key of animation.keyframes) {
+        if (key.timestamp == parseInt(ts)) {
+            for (i in sprite.paths) {
+                sprite.paths[i] = key.paths[i]
+                sprite.updatePath(i)
+            }
+            sprite.updateImage()
+            draw([sprite])
+            return
+        }
+    }
 }
 
 function addKeyFrame() {
