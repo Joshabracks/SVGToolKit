@@ -8,6 +8,8 @@ ctx.canvas.height = height
 ctx.canvas.width = width
 
 let sprite = false;
+let animation = false;
+let selectedKey = false;
 
 function getSVG() {
     const file = new FormData(document.querySelector('form')).get('file');
@@ -22,7 +24,6 @@ function getSVG() {
 }
 
 function populateSliders(v) {
-    console.log("POPULATING")
     let htmGo = ''
     for (let i = 0; i < v.length; i++) {
         if (v[i].number == true) {
@@ -70,4 +71,51 @@ async function draw(sprites) {
     for (let q of drawQ) {
         ctx.drawImage(q.image, q.x, q.y)
     }
+}
+
+function newAnimation() {
+    sprite.newAnimation(Object.keys(sprite.animations).length)
+        .then(data => {
+            animation = data;
+            loadAnimation(data)
+        })
+        .catch(err => alert(err))
+}
+
+function loadAnimation(anim) {
+    let footer = document.getElementById('footer')
+    let htmGo = ''
+    htmGo += "<div id='keyFrames'>"
+    for (let key of anim.keyframes) {
+        htmGo += "<button onclick='loadFrame(" + key.timestamp + ")'class='keyFrame' id='key" + key.timestamp + "' style='left:" + (key.timestamp / anim.length) * 99 + "%;'></button>"
+    }
+    htmGo += "</div>"
+    htmGo += `<input type="range" min="0" max="` + anim.length + `" value="0" class="slider" id="animSlider"></input>`
+    htmGo += `<br><button onclick='addKeyFrame()'>new key frame</button>  <button onclick='deleteKeyFrame()'>delete keyframe</button>`
+    footer.innerHTML = htmGo
+}
+
+function loadFrame(ts) {
+    let slider = document.getElementById('animSlider')
+    slider.value = ts;
+}
+
+function addKeyFrame() {
+    let slider = document.getElementById('animSlider')
+    let value = JSON.parse(JSON.stringify(slider.value))
+    animation = sprite.addKeyFrame(animation.name, value)
+    loadAnimation(animation)
+    document.getElementById('animSlider').value = value
+}
+
+function deleteKeyFrame() {
+    let value = document.getElementById('animSlider').value
+    for (let key of animation.keyframes) {
+        if (value == 0) {
+            alert('Cannot Delete Key at Time Stamp 0')
+        } else if (key.timestamp == value) {
+            delete key;
+        }
+    }
+    loadAnimation(animation)
 }

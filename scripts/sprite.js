@@ -3,6 +3,7 @@ const s = new XMLSerializer()
 
 class Sprite {
     constructor(string) {
+        this.animations = {}
         this.parseSVG(string)
         this.image = this.updateImage(string)
         this.animations = {}
@@ -77,14 +78,23 @@ class Sprite {
         return image
     }
     newAnimation = (name, length = 1000) => {
-        this.animations[name] = {
-            length: length,
-            keyframes: [{ timestamp: 0, paths: JSON.parse(JSON.stringify(this.paths)) }],
-        }
+        return new Promise((resolve, reject) => {
+            if (!this.animations[name]) {
+                this.animations[name] = {
+                    name: name,
+                    length: length,
+                    keyframes: [{ timestamp: 0, paths: JSON.parse(JSON.stringify(this.paths)) }],
+                }
+                return resolve(this.animations[name])
+            } else {
+                reject ("An animation with the name " + name + " already exists.")
+            }
+        })
     }
     addKeyFrame = (animation, timestamp) => {
-        animation.keyframes.push({ timestamp: timestamp, paths: JSON.parse(JSON.stringify(this.paths)) })
-        animation.keyframes = this.orderKeyFrames(animation.keyframes)
+        this.animations[animation].keyframes.push({ timestamp: timestamp, paths: JSON.parse(JSON.stringify(this.paths)) })
+        let kf = this.orderKeyFrames(this.animations[animation].keyframes)
+        return this.animations[animation]
     }
     orderKeyFrames = (frames) => {
         if (frames.length < 2) {
@@ -100,7 +110,11 @@ class Sprite {
                 more.push[frames[i]]
             }
         }
-        return this.orderKeyFrames(less).push(pivot).concat(this.orderKeyFrames(more))
+        less = this.orderKeyFrames(less)
+        less.push(pivot)
+        more = this.orderKeyFrames(more)
+        less.concat(more)
+        return less
     }
     playback = (animation) => {
         this.currentAnim = animation
