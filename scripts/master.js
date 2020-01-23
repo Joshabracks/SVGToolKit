@@ -10,6 +10,7 @@ ctx.canvas.width = width
 let sprite = false;
 let animation = false;
 let selectedKey = false;
+let lastFrame = Date.now()
 
 function getSVG() {
     const file = new FormData(document.querySelector('form')).get('file');
@@ -93,13 +94,47 @@ function loadAnimation(anim) {
     htmGo += `<input type="range" min="0" max="` + anim.length + `" value="0" class="slider" id="animSlider"></input>`
     htmGo += `<br><button onclick='addKeyFrame()'>new key frame</button>  <button onclick='deleteKeyFrame()'>delete keyframe</button>`
     footer.innerHTML = htmGo
+    const slider = document.getElementById('animSlider')
+    slider.oninput = () => {
+        if (Date.now() - lastFrame > (50)) {
+            // requestAnimationFrame()
+            loadFrame(slider.value)
+            lastFrame = Date.now()
+        }
+    }
+}
+
+function reloadAnim(){
+    loadAnimation(animation)
 }
 
 function loadFrame(ts) {
     let slider = document.getElementById('animSlider')
-    slider.value = ts;
+    let lowFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
+    let hiFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
     for (let key of animation.keyframes) {
+        lowFrame = hiFrame
+        hiFrame = JSON.parse(JSON.stringify(key))
+        if (ts > lowFrame.timestamp && ts < hiFrame.timestamp) {
+            for (i in sprite.paths) {
+                let path = sprite.paths[i]
+                for (j in path) {
+                    if (path[j].number) {
+                        // console.log((hiFrame.paths[i][j].value - lowFrame.paths[i][j].value) / 2)
+                        let frameDiff = hiFrame.timestamp - lowFrame.timestamp
+                        let tsDiff = ts - lowFrame.timestamp
+                        let percent = parseFloat(tsDiff / frameDiff).toFixed(2)
+                        let diff = parseFloat(lowFrame.paths[i][j].value) + ((hiFrame.paths[i][j].value - lowFrame.paths[i][j].value) * percent)
+                        path[j].value = diff
+                    }
+                }
+                sprite.updatePath(i)
+            }
+            sprite.updateImage()
+            draw([sprite])
+        }
         if (key.timestamp == parseInt(ts)) {
+            slider.value = ts;
             for (i in sprite.paths) {
                 sprite.paths[i] = key.paths[i]
                 sprite.updatePath(i)
@@ -108,6 +143,7 @@ function loadFrame(ts) {
             draw([sprite])
             return
         }
+
     }
 }
 
