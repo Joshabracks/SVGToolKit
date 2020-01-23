@@ -87,8 +87,8 @@ function loadAnimation(anim) {
     let footer = document.getElementById('footer')
     let htmGo = ''
     htmGo += "<div id='keyFrames'>"
-    for (let key of anim.keyframes) {
-        htmGo += "<button onclick='loadFrame(" + key.timestamp + ")'class='keyFrame' id='key" + key.timestamp + "' style='left:" + (key.timestamp / anim.length) * 99 + "%;'></button>"
+    for (key in anim.keyframes) {
+        htmGo += "<button onclick='loadFrame(" + anim.keyframes[key].timestamp + ")'class='keyFrame' id='key" + anim.keyframes[key].timestamp + "' style='left:" + (anim.keyframes[key].timestamp / anim.length) * 99 + "%;'></button>"
     }
     htmGo += "</div>"
     htmGo += `<input type="range" min="0" max="` + anim.length + `" value="0" class="slider" id="animSlider"></input>`
@@ -112,9 +112,9 @@ function loadFrame(ts) {
     let slider = document.getElementById('animSlider')
     let lowFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
     let hiFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
-    for (let key of animation.keyframes) {
+    for (key in animation.keyframes) {
         lowFrame = hiFrame
-        hiFrame = JSON.parse(JSON.stringify(key))
+        hiFrame = JSON.parse(JSON.stringify(animation.keyframes[key]))
         if (ts > lowFrame.timestamp && ts < hiFrame.timestamp) {
             for (i in sprite.paths) {
                 let path = sprite.paths[i]
@@ -133,10 +133,10 @@ function loadFrame(ts) {
             sprite.updateImage()
             draw([sprite])
         }
-        if (key.timestamp == parseInt(ts)) {
+        if (key == parseInt(ts)) {
             slider.value = ts;
             for (i in sprite.paths) {
-                sprite.paths[i] = key.paths[i]
+                sprite.paths[i] = animation.keyframes[key].paths[i]
                 sprite.updatePath(i)
             }
             sprite.updateImage()

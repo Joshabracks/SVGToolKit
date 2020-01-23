@@ -83,7 +83,9 @@ class Sprite {
                 this.animations[name] = {
                     name: name,
                     length: length,
-                    keyframes: [{ timestamp: 0, paths: JSON.parse(JSON.stringify(this.paths)) }],
+                    keyframes: {
+                        0: { timestamp: 0, paths: JSON.parse(JSON.stringify(this.paths)) }
+                    },
                 }
                 return resolve(this.animations[name])
             } else {
@@ -92,8 +94,8 @@ class Sprite {
         })
     }
     addKeyFrame = (animation, timestamp) => {
-        this.animations[animation].keyframes.push({ timestamp: parseInt(timestamp), paths: JSON.parse(JSON.stringify(this.paths)) })
-        let kf = this.orderKeyFrames(this.animations[animation].keyframes)
+        this.animations[animation].keyframes[parseInt(timestamp)] = { timestamp: parseInt(timestamp), paths: JSON.parse(JSON.stringify(this.paths)) }
+        // let kf = this.orderKeyFrames(this.animations[animation].keyframes)
         return this.animations[animation]
     }
     orderKeyFrames = (frames) => {
