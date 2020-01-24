@@ -163,7 +163,7 @@ class Sprite {
     loadState(state) {
         if (this.states[state]) {
             this.paths = this.states[state]
-            for (path in this.paths) {
+            for (let path in this.paths) {
                 this.updatePath(path)
             }
             this.updateImage()

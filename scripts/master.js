@@ -128,11 +128,11 @@ function loadAnimation(anim) {
     let htmGo = ''
     htmGo += "<div id='keyFrames'>"
     for (key in anim.keyframes) {
-        htmGo += "<button onclick='loadFrame(" + anim.keyframes[key].timestamp + ")'class='keyFrame' id='key" + anim.keyframes[key].timestamp + "' style='left:" + (anim.keyframes[key].timestamp / anim.length) * 99 + "%;'></button>"
+        htmGo += "<button onclick='selectKeyFrame(event)'class='keyFrame' id='key" + anim.keyframes[key].timestamp + "' style='left:" + (anim.keyframes[key].timestamp / anim.length) * 99 + "%;'></button>"
     }
     htmGo += "</div>"
     htmGo += `<input type="range" min="0" max="` + anim.length + `" value="0" class="slider" id="animSlider"></input>`
-    htmGo += `<br><button onclick='addKeyFrame()'>new key frame</button>  <button onclick='deleteKeyFrame()'>delete keyframe</button>  <button onclick="play()">play</button>  <button onclick="stop()">stop</button>`
+    htmGo += `<br><button onclick='addKeyFrame()'>new key frame</button>  <button onclick='deleteKeyFrame()'>delete keyframe</button>  <button onclick="play()">play</button>  <button onclick="stop()">stop</button>  <button onclick="moveKey()">move key frame</button>`
     footer.innerHTML = htmGo
     const slider = document.getElementById('animSlider')
     slider.oninput = () => {
@@ -188,6 +188,11 @@ function loadFrame(ts) {
         }
 
     }
+    render = false;
+    playing = false;
+    if (player) {
+        clearInterval(player)
+    }
 }
 
 function addKeyFrame() {
@@ -202,12 +207,10 @@ function addKeyFrame() {
 
 function deleteKeyFrame() {
     let value = document.getElementById('animSlider').value
-    for (let key of animation.keyframes) {
-        if (value == 0) {
-            alert('Cannot Delete Key at Time Stamp 0')
-        } else if (key.timestamp == value) {
-            delete key;
-        }
+    if (value == 0) {
+        alert('Cannot Delete Key at Time Stamp 0')
+    } else if (animation.keyframes[value].timestamp) {
+        delete animation.keyframes[value]
     }
     loadAnimation(animation)
 }
@@ -287,7 +290,6 @@ let player;
 function play() {
     if (render) {
         player = setInterval(() => {
-            console.log(sprite.animFrame)
             let slider = document.getElementById('animSlider')
             if (sprite.animFrame <= animation.render.length) {
                 slider.value = sprite.animFrame
@@ -320,7 +322,7 @@ function playTrue() {
 function stop() {
     clearInterval(player)
     sprite.animFrame = 0
-    render = false;
+    // render = false;
 }
 
 async function renderAnimation() {
@@ -344,7 +346,6 @@ async function renderAnimation() {
                             let frameDiff = hiFrame.timestamp - lowFrame.timestamp
                             let tsDiff = renderStep - lowFrame.timestamp
                             let percent = parseFloat(tsDiff / frameDiff)
-                            // console.log(percent)
                             let diff = parseFloat(lowFrame.paths[i][j].value) + ((hiFrame.paths[i][j].value - lowFrame.paths[i][j].value) * percent)
                             path[j].value = diff
                         }
@@ -356,7 +357,6 @@ async function renderAnimation() {
                     .then(data => { string = data })
                     .catch(console.log)
                 animation.render.push(string)
-                // draw([sprite])
             } else if (key == parseInt(renderStep)) {
                 for (i in sprite.paths) {
                     sprite.paths[i] = animation.keyframes[key].paths[i]
@@ -367,7 +367,6 @@ async function renderAnimation() {
                     .then(data => { string = data })
                     .catch(console.log)
                 animation.render.push(string)
-                // draw([sprite])
             }
             renderStep++
         }
@@ -377,4 +376,32 @@ async function renderAnimation() {
     loadAnimation(animation)
     render = true;
     play()
+}
+
+
+function selectKeyFrame(e) {
+    if (selectedKey) {
+        selectedKey.style.backgroundColor = 'slategray'
+    }
+    selectedKey = e.target
+    loadFrame(selectedKey.id.slice(3))
+    selectedKey.style.backgroundColor = 'red'
+}
+
+function moveKey() {
+    let value = selectedKey.id.slice(3)
+    if (value == 0) {
+        alert("Cannot move Key Frame at 0")
+        return
+    }
+    let sliderVal = document.getElementById('animSlider').value
+    if (value == sliderVal) {
+        return
+    }
+    let oldKey = animation.keyframes[value]
+    let newKey = JSON.parse(JSON.stringify(oldKey))
+    newKey.timestamp = parseInt(sliderVal)
+    animation.keyframes[sliderVal] = newKey
+    delete animation.keyframes[value]
+    loadAnimation(animation)
 }
