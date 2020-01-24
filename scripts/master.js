@@ -117,7 +117,6 @@ async function draw(sprites) {
 function newAnimation() {
     sprite.newAnimation(Object.keys(sprite.animations).length)
         .then(data => {
-            console.log(data)
             animation = data;
             loadAnimation(data)
         })
@@ -125,8 +124,6 @@ function newAnimation() {
 }
 
 function loadAnimation(anim) {
-    console.log("Anim: ", anim)
-    console.log("Animation: ", animation)
     let footer = document.getElementById('footer')
     let htmGo = ''
     htmGo += "<div id='keyFrames'>"
@@ -146,6 +143,9 @@ function loadAnimation(anim) {
         }
     }
     animationSelect()
+    render = false;
+    sprite.animFrame = 0
+    slider.value = 0;
 }
 
 function reloadAnim() {
@@ -164,7 +164,6 @@ function loadFrame(ts) {
                 let path = sprite.paths[i]
                 for (j in path) {
                     if (path[j].number) {
-                        // console.log((hiFrame.paths[i][j].value - lowFrame.paths[i][j].value) / 2)
                         let frameDiff = hiFrame.timestamp - lowFrame.timestamp
                         let tsDiff = ts - lowFrame.timestamp
                         let percent = parseFloat(tsDiff / frameDiff).toFixed(2)
@@ -288,6 +287,7 @@ let player;
 function play() {
     if (render) {
         player = setInterval(() => {
+            console.log(sprite.animFrame)
             let slider = document.getElementById('animSlider')
             if (sprite.animFrame <= animation.render.length) {
                 slider.value = sprite.animFrame
@@ -307,8 +307,6 @@ function play() {
                 ctx.fillRect(0, 0, width, height)
                 ctx.drawImage(image, sprite.x, sprite.y)
             }
-            // loadFrame(slider.value)
-            // console.log(slider.value)
         }, 1000 / 60)
     } else {
         renderAnimation()
@@ -321,6 +319,8 @@ function playTrue() {
 
 function stop() {
     clearInterval(player)
+    sprite.animFrame = 0
+    render = false;
 }
 
 async function renderAnimation() {
@@ -329,53 +329,52 @@ async function renderAnimation() {
     document.getElementById('animations').innerHTML = ''
     document.getElementById('states').innerHTML = ''
     document.getElementById('footer').innerHTML = "<h1> RENDERING </h1>"
-    while (renderStep < animation.length) {
-        console.log(renderStep)
-        let lowFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
-        let hiFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
-        for (key in animation.keyframes) {
-            lowFrame = hiFrame
-            hiFrame = JSON.parse(JSON.stringify(animation.keyframes[key]))
+
+    let lowFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
+    let hiFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
+    for (key in animation.keyframes) {
+        lowFrame = hiFrame
+        hiFrame = JSON.parse(JSON.stringify(animation.keyframes[key]))
+        while (renderStep <= key) {
             if (renderStep > lowFrame.timestamp && renderStep < hiFrame.timestamp) {
                 for (i in sprite.paths) {
                     let path = sprite.paths[i]
                     for (j in path) {
                         if (path[j].number) {
-                            // console.log((hiFrame.paths[i][j].value - lowFrame.paths[i][j].value) / 2)
                             let frameDiff = hiFrame.timestamp - lowFrame.timestamp
                             let tsDiff = renderStep - lowFrame.timestamp
-                            let percent = parseFloat(tsDiff / frameDiff).toFixed(2)
+                            let percent = parseFloat(tsDiff / frameDiff)
+                            // console.log(percent)
                             let diff = parseFloat(lowFrame.paths[i][j].value) + ((hiFrame.paths[i][j].value - lowFrame.paths[i][j].value) * percent)
                             path[j].value = diff
                         }
                     }
                     sprite.updatePath(i)
                 }
-                let blob;
+                let string;
                 await sprite.renderFrame()
-                    .then(data => { blob = data })
+                    .then(data => { string = data })
                     .catch(console.log)
-                animation.render.push(blob)
-                draw([sprite])
-            }
-            if (key == parseInt(renderStep)) {
+                animation.render.push(string)
+                // draw([sprite])
+            } else if (key == parseInt(renderStep)) {
                 for (i in sprite.paths) {
                     sprite.paths[i] = animation.keyframes[key].paths[i]
                     sprite.updatePath(i)
                 }
-                let blob;
+                let string;
                 await sprite.renderFrame()
-                    .then(data => { blob = data })
+                    .then(data => { string = data })
                     .catch(console.log)
-                animation.render.push(blob)
-                draw([sprite])
+                animation.render.push(string)
+                // draw([sprite])
             }
-
+            renderStep++
         }
-        renderStep++
     }
     stateSelect()
     animationSelect()
     loadAnimation(animation)
     render = true;
+    play()
 }
