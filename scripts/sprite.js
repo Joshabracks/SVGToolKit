@@ -79,6 +79,12 @@ class Sprite {
         image.src = url
         return image
     }
+    renderFrame = () => {
+        return new Promise((resolve, reject) => {
+            let string = s.serializeToString(this.xmlDoc)
+            return resolve(string)
+        })
+    }
     newAnimation = (name, length = 1000) => {
         return new Promise((resolve, reject) => {
             if (!this.animations[name]) {
@@ -91,7 +97,7 @@ class Sprite {
                 }
                 return resolve(this.animations[name])
             } else {
-                reject ("An animation with the name " + name + " already exists.")
+                reject("An animation with the name " + name + " already exists.")
             }
         })
     }
@@ -110,7 +116,7 @@ class Sprite {
         for (let frame of frames) {
             if (frame.timestamp > pivot.timestamp) {
                 more.push(frame)
-            } else if (frame.timestamp < pivot.timestamp){
+            } else if (frame.timestamp < pivot.timestamp) {
                 less.push(frame)
             } else if (frame.timestamp == pivot.timestamp) {
                 pivot = frame
@@ -154,10 +160,10 @@ class Sprite {
         let newState = JSON.parse(JSON.stringify(this.paths))
         this.states[Object.keys(this.states).length] = newState
     }
-    loadState(state){
+    loadState(state) {
         if (this.states[state]) {
             this.paths = this.states[state]
-            for ( path in this.paths ) {
+            for (path in this.paths) {
                 this.updatePath(path)
             }
             this.updateImage()

@@ -11,6 +11,8 @@ let sprite = false;
 let animation = false;
 let selectedKey = false;
 let lastFrame = Date.now()
+let playing = false;
+let render = false;
 
 document.getElementById("file").onchange = function () {
     document.getElementById("spriteForm").onsubmit()
@@ -45,7 +47,7 @@ function loadSprite() {
                 sprite.paths = data.paths
                 sprite.animations = data.animations
                 sprite.states = data.states
-                for ( path in sprite.paths ) {
+                for (path in sprite.paths) {
                     sprite.updatePath(path)
                 }
                 populateSliders(sprite.paths[0])
@@ -133,7 +135,7 @@ function loadAnimation(anim) {
     }
     htmGo += "</div>"
     htmGo += `<input type="range" min="0" max="` + anim.length + `" value="0" class="slider" id="animSlider"></input>`
-    htmGo += `<br><button onclick='addKeyFrame()'>new key frame</button>  <button onclick='deleteKeyFrame()'>delete keyframe</button>`
+    htmGo += `<br><button onclick='addKeyFrame()'>new key frame</button>  <button onclick='deleteKeyFrame()'>delete keyframe</button>  <button onclick="play()">play</button>  <button onclick="stop()">stop</button>`
     footer.innerHTML = htmGo
     const slider = document.getElementById('animSlider')
     slider.oninput = () => {
@@ -196,6 +198,7 @@ function addKeyFrame() {
     loadAnimation(animation)
     document.getElementById('animSlider').value = value
     stateSelect()
+    render = false;
 }
 
 function deleteKeyFrame() {
@@ -225,14 +228,14 @@ function downloadSprite() {
     }
 }
 
-function saveState(){
+function saveState() {
     sprite.saveState()
     stateSelect()
 }
 
 function stateSelect() {
     let htmGo = ''
-    for ( state in sprite.states ) {
+    for (state in sprite.states) {
         htmGo += `<button onclick="loadState(` + state + `)">` + state + `</button>`
     }
     document.getElementById('states').innerHTML = htmGo
@@ -240,7 +243,7 @@ function stateSelect() {
 
 function animationSelect() {
     let htmGo = ''
-    for ( anim in sprite.animations ) {
+    for (anim in sprite.animations) {
         htmGo += `<button onclick="animLoad(` + anim + `)">` + anim + `</button>`
     }
     document.getElementById('animations').innerHTML = htmGo
@@ -266,6 +269,113 @@ function showTools() {
 
 function renameSprite() {
     sprite.name = document.getElementById('spriteName').value
-    alert("Sprite name changed to " + sprite.name )
+    alert("Sprite name changed to " + sprite.name)
     return 'success'
+}
+
+// function play() {
+//     if (render) {
+//         sprite.animFrame = document.getElementById('animSlider').value
+//         playing = true
+//         playTrue()
+//     } else {
+//         renderAnimation()
+//     }
+// }
+
+let player;
+
+function play() {
+    if (render) {
+        player = setInterval(() => {
+            let slider = document.getElementById('animSlider')
+            if (sprite.animFrame <= animation.render.length) {
+                slider.value = sprite.animFrame
+                sprite.animFrame++
+                // window.requestAnimationFrame(function () { playTrue() })
+            } else if (sprite.animFrame > animation.render.length) {
+                sprite.animFrame = 0
+                slider.value = sprite.animFrame
+                // window.requestAnimationFrame(function () { playTrue() })
+            }
+            let blob = new Blob([animation.render[sprite.animFrame]], { type: 'image/svg+xml' })
+            const url = window.URL.createObjectURL(blob)
+            const image = new Image(this.width, this.height)
+            image.src = url
+            ctx.fillStyle = 'white';
+            image.onload = () => {
+                ctx.fillRect(0, 0, width, height)
+                ctx.drawImage(image, sprite.x, sprite.y)
+            }
+            // loadFrame(slider.value)
+            // console.log(slider.value)
+        }, 1000 / 60)
+    } else {
+        renderAnimation()
+    }
+}
+
+function playTrue() {
+    player()
+}
+
+function stop() {
+    clearInterval(player)
+}
+
+async function renderAnimation() {
+    animation.render = []
+    let renderStep = 0;
+    document.getElementById('animations').innerHTML = ''
+    document.getElementById('states').innerHTML = ''
+    document.getElementById('footer').innerHTML = "<h1> RENDERING </h1>"
+    while (renderStep < animation.length) {
+        console.log(renderStep)
+        let lowFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
+        let hiFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
+        for (key in animation.keyframes) {
+            lowFrame = hiFrame
+            hiFrame = JSON.parse(JSON.stringify(animation.keyframes[key]))
+            if (renderStep > lowFrame.timestamp && renderStep < hiFrame.timestamp) {
+                for (i in sprite.paths) {
+                    let path = sprite.paths[i]
+                    for (j in path) {
+                        if (path[j].number) {
+                            // console.log((hiFrame.paths[i][j].value - lowFrame.paths[i][j].value) / 2)
+                            let frameDiff = hiFrame.timestamp - lowFrame.timestamp
+                            let tsDiff = renderStep - lowFrame.timestamp
+                            let percent = parseFloat(tsDiff / frameDiff).toFixed(2)
+                            let diff = parseFloat(lowFrame.paths[i][j].value) + ((hiFrame.paths[i][j].value - lowFrame.paths[i][j].value) * percent)
+                            path[j].value = diff
+                        }
+                    }
+                    sprite.updatePath(i)
+                }
+                let blob;
+                await sprite.renderFrame()
+                    .then(data => { blob = data })
+                    .catch(console.log)
+                animation.render.push(blob)
+                draw([sprite])
+            }
+            if (key == parseInt(renderStep)) {
+                for (i in sprite.paths) {
+                    sprite.paths[i] = animation.keyframes[key].paths[i]
+                    sprite.updatePath(i)
+                }
+                let blob;
+                await sprite.renderFrame()
+                    .then(data => { blob = data })
+                    .catch(console.log)
+                animation.render.push(blob)
+                draw([sprite])
+            }
+
+        }
+        renderStep++
+    }
+    stateSelect()
+    animationSelect()
+    loadAnimation(animation)
+    render = true;
 }
