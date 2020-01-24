@@ -11,6 +11,8 @@ class Sprite {
         this.animKey = 0
         this.animate = false
         this.originalPaths = JSON.parse(JSON.stringify(this.paths))
+        this.states = {}
+        this.name = "sprite"
     }
     parseSVG = (string) => {
         let paths = {}
@@ -146,6 +148,21 @@ class Sprite {
             }
         } else {
             this.updateImage()
+        }
+    }
+    saveState() {
+        let newState = JSON.parse(JSON.stringify(this.paths))
+        this.states[Object.keys(this.states).length] = newState
+    }
+    loadState(state){
+        if (this.states[state]) {
+            this.paths = this.states[state]
+            for ( path in this.paths ) {
+                this.updatePath(path)
+            }
+            this.updateImage()
+        } else {
+            alert("State of " + state + " does not exist.")
         }
     }
 }

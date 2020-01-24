@@ -12,16 +12,54 @@ let animation = false;
 let selectedKey = false;
 let lastFrame = Date.now()
 
-function getSVG() {
+document.getElementById("file").onchange = function () {
+    document.getElementById("spriteForm").onsubmit()
+}
+
+function openFile() {
+    document.getElementById('file').click()
+}
+
+function loadSprite() {
     const file = new FormData(document.querySelector('form')).get('file');
-    file.text()
-        .then(svg => {
-            let newSprite = new Sprite(svg)
-            sprite = newSprite
-            populateSliders(sprite.paths[0])
-            draw([sprite])
-        })
-        .catch(console.log)
+    if (file.name.slice(file.name.length - 3) == "svg") {
+        file.text()
+            .then(svg => {
+                let newSprite = new Sprite(svg)
+                sprite = newSprite
+                populateSliders(sprite.paths[0])
+                draw([sprite])
+                showTools()
+            })
+            .catch(console.log)
+    }
+    if (file.name.slice(file.name.length - 3) == "spt") {
+        sprite = new Sprite(`<?xml version="1.0" encoding="utf-8" ?>
+        <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+        <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="238.5px" height="360px" viewBox="121.5 0 238.5 360" enable-background="new 121.5 0 238.5 360" xml:space="preserve">
+            <path fill="#BE1E2D" d="M245.5,30.75c0,94.5-96,100-96,194s74.75,104.5,96,104.5s96-10.5,96-104.5S245.5,125.25,245.5,30.75z" />
+        </svg>`)
+        file.text()
+            .then(spt => {
+                let data = JSON.parse(spt)
+                sprite.paths = data.paths
+                sprite.animations = data.animations
+                sprite.states = data.states
+                for ( path in sprite.paths ) {
+                    sprite.updatePath(path)
+                }
+                populateSliders(sprite.paths[0])
+                draw([sprite])
+                showTools()
+                if (Object.keys(sprite.states).length > 0) {
+                    stateSelect()
+                }
+                if (Object.keys(sprite.animations).length > 0) {
+                    animationSelect()
+                }
+            })
+            .catch(console.log)
+    }
 }
 
 function populateSliders(v) {
@@ -77,6 +115,7 @@ async function draw(sprites) {
 function newAnimation() {
     sprite.newAnimation(Object.keys(sprite.animations).length)
         .then(data => {
+            console.log(data)
             animation = data;
             loadAnimation(data)
         })
@@ -84,6 +123,8 @@ function newAnimation() {
 }
 
 function loadAnimation(anim) {
+    console.log("Anim: ", anim)
+    console.log("Animation: ", animation)
     let footer = document.getElementById('footer')
     let htmGo = ''
     htmGo += "<div id='keyFrames'>"
@@ -102,9 +143,10 @@ function loadAnimation(anim) {
             lastFrame = Date.now()
         }
     }
+    animationSelect()
 }
 
-function reloadAnim(){
+function reloadAnim() {
     loadAnimation(animation)
 }
 
@@ -153,6 +195,7 @@ function addKeyFrame() {
     animation = sprite.addKeyFrame(animation.name, value)
     loadAnimation(animation)
     document.getElementById('animSlider').value = value
+    stateSelect()
 }
 
 function deleteKeyFrame() {
@@ -165,4 +208,64 @@ function deleteKeyFrame() {
         }
     }
     loadAnimation(animation)
+}
+
+function downloadSprite() {
+    if (sprite) {
+        let blob = new Blob([JSON.stringify(sprite, undefined, 2)], { type: "application/json" })
+        let url = window.URL.createObjectURL(blob)
+        let a = document.createElement('a')
+        a.href = url
+        a.download = sprite.name + '.spt'
+        a.click()
+        window.URL.revokeObjectURL(url)
+
+    } else {
+        alert("No Sprite is Loaded")
+    }
+}
+
+function saveState(){
+    sprite.saveState()
+    stateSelect()
+}
+
+function stateSelect() {
+    let htmGo = ''
+    for ( state in sprite.states ) {
+        htmGo += `<button onclick="loadState(` + state + `)">` + state + `</button>`
+    }
+    document.getElementById('states').innerHTML = htmGo
+}
+
+function animationSelect() {
+    let htmGo = ''
+    for ( anim in sprite.animations ) {
+        htmGo += `<button onclick="animLoad(` + anim + `)">` + anim + `</button>`
+    }
+    document.getElementById('animations').innerHTML = htmGo
+}
+
+function animLoad(id) {
+    animation = sprite.animations[id]
+    loadAnimation(animation)
+}
+
+function loadState(state) {
+    sprite.loadState(state)
+    draw([sprite])
+}
+
+function showTools() {
+    let buttons = document.getElementsByClassName('tool')
+    for (let i of buttons) {
+        i.style.display = "inline"
+    }
+    document.getElementById('spriteName').value = sprite.name
+}
+
+function renameSprite() {
+    sprite.name = document.getElementById('spriteName').value
+    alert("Sprite name changed to " + sprite.name )
+    return 'success'
 }
