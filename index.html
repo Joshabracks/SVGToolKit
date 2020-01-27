@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,19 +8,55 @@
     <link rel="stylesheet" href="style.css">
     <title>Editor</title>
 </head>
+
 <body>
     <header>
-        <form onsubmit="getSVG();return false">
-            <label for="svg">Choose SVG</label>
-            <input type="file" accept=".svg" name="file" id="file">
-            <button type="submit">Load SVG</button>
+        <form onsubmit="loadSprite();return false" id="spriteForm">
+            <!-- <label for="svg">Choose SVG or Sprite</label> -->
+            <input type="file" accept=".svg, .spt" name="file" id="file" style="display: none;" />
+            <button onclick="openFile()">Load SVG or Sprite</button>
         </form>
+        <button class="tool button" onclick="resetSVG()">reset Sprite</button>
+        <button class="tool button" onclick="newAnimation()">new Animation</button>
+        <button class="tool button" onclick="downloadSprite()">save Sprite</button>
+        <button class="tool button" onclick="saveState()">save State</button>
+        <div class="tool" style="display: none;">
+            <form onsubmit="renameSprite();return false">
+                <input type="text" name="spriteName" id="spriteName">
+                <button type="submit">Rename Sprite</button>
+            </form>
+        </div>
     </header>
     <aside>
-
+        <div id="slidewrap"></div>
     </aside>
     <canvas id="canvas"></canvas>
+    <footer id="footer">
+    </footer>
+    <div id="loader">
+        <div class="loadInner center">
+            <table class="centered">
+                <tr>
+                    <td class="center">Load Image State</td>
+                </tr>
+                <tr>
+                    <td class="center" id="states"></td>
+                </tr>
+            </table>
+        </div>
+        <div class="loadInner center">
+            <table class="centered">
+                <tr>
+                    <td class="center">Load Animation</td>
+                </tr>
+                <tr>
+                    <td class="center" id="animations"></td>
+                </tr>
+            </table>
+        </div>
+    </div>
     <script src="./scripts/sprite.js"></script>
     <script src="./scripts/master.js"></script>
 </body>
+
 </html>
