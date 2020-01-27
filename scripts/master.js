@@ -44,12 +44,18 @@ function loadSprite() {
         file.text()
             .then(spt => {
                 let data = JSON.parse(spt)
-                sprite.paths = data.paths
-                sprite.animations = data.animations
-                sprite.states = data.states
+                console.log(data)
+                sprite.paths = JSON.parse(JSON.stringify(data.paths))
+                sprite.animations = JSON.parse(JSON.stringify(data.animations))
+                sprite.states = JSON.parse(JSON.stringify(data.states))
+                sprite.name = JSON.parse(JSON.stringify(data.name))
+                sprite.width = JSON.parse(JSON.stringify(data.width))
+                sprite.height = JSON.parse(JSON.stringify(data.height))
+                sprite.originalPaths = JSON.parse(JSON.stringify(data.originalPaths))
                 for (path in sprite.paths) {
                     sprite.updatePath(path)
                 }
+                sprite.updateImage()
                 populateSliders(sprite.paths[0])
                 draw([sprite])
                 showTools()
@@ -285,44 +291,73 @@ function renameSprite() {
 //     }
 // }
 
-let player;
+// let player;
 
-function play() {
+// function play() {
+//     if (render) {
+//         player = setInterval(() => {
+//             let slider = document.getElementById('animSlider')
+//             if (sprite.animFrame <= animation.render.length) {
+//                 slider.value = sprite.animFrame
+//                 sprite.animFrame++
+//                 // window.requestAnimationFrame(function () { playTrue() })
+//             } else if (sprite.animFrame > animation.render.length) {
+//                 sprite.animFrame = 0
+//                 slider.value = sprite.animFrame
+//                 // window.requestAnimationFrame(function () { playTrue() })
+//             }
+//             let blob = new Blob([animation.render[sprite.animFrame]], { type: 'image/svg+xml' })
+//             const url = window.URL.createObjectURL(blob)
+//             const image = new Image(this.width, this.height)
+//             image.src = url
+//             ctx.fillStyle = 'white';
+//             image.onload = () => {
+//                 ctx.fillRect(0, 0, width, height)
+//                 ctx.drawImage(image, sprite.x, sprite.y)
+//             }
+//         }, 1000 / 60)
+//     } else {
+//         renderAnimation()
+//     }
+// }
+
+function player() {
     if (render) {
-        player = setInterval(() => {
-            let slider = document.getElementById('animSlider')
-            if (sprite.animFrame <= animation.render.length) {
-                slider.value = sprite.animFrame
-                sprite.animFrame++
-                // window.requestAnimationFrame(function () { playTrue() })
-            } else if (sprite.animFrame > animation.render.length) {
-                sprite.animFrame = 0
-                slider.value = sprite.animFrame
-                // window.requestAnimationFrame(function () { playTrue() })
-            }
-            let blob = new Blob([animation.render[sprite.animFrame]], { type: 'image/svg+xml' })
-            const url = window.URL.createObjectURL(blob)
-            const image = new Image(this.width, this.height)
-            image.src = url
-            ctx.fillStyle = 'white';
-            image.onload = () => {
-                ctx.fillRect(0, 0, width, height)
-                ctx.drawImage(image, sprite.x, sprite.y)
-            }
-        }, 1000 / 60)
-    } else {
-        renderAnimation()
+        let slider = document.getElementById('animSlider')
+        if (sprite.animFrame <= animation.render.length) {
+            slider.value = sprite.animFrame
+            sprite.animFrame++
+        } else if (sprite.animFrame > animation.render.length) {
+            sprite.animFrame = 0
+            slider.value = sprite.animFrame
+        }
+        let blob = new Blob([animation.render[sprite.animFrame]], { type: 'image/svg+xml' })
+        const url = window.URL.createObjectURL(blob)
+        const image = new Image(this.width, this.height)
+        image.src = url
+        ctx.fillStyle = 'white';
+        image.onload = () => {
+            ctx.fillRect(0, 0, width, height)
+            ctx.drawImage(image, sprite.x, sprite.y)
+        }
+        window.requestAnimationFrame(function () { player() })
     }
 }
 
-function playTrue() {
-    player()
+function play() {
+    if (render) {
+        player()
+    } else { renderAnimation() }
 }
 
+// function playTrue() {
+//     player()
+// }
+
 function stop() {
-    clearInterval(player)
     sprite.animFrame = 0
-    // render = false;
+    render = false;
+
 }
 
 async function renderAnimation() {
@@ -335,7 +370,7 @@ async function renderAnimation() {
     let lowFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
     let hiFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
     for (key in animation.keyframes) {
-        lowFrame = hiFrame
+        lowFrame = JSON.parse(JSON.stringify(hiFrame))
         hiFrame = JSON.parse(JSON.stringify(animation.keyframes[key]))
         while (renderStep <= key) {
             if (renderStep > lowFrame.timestamp && renderStep < hiFrame.timestamp) {
@@ -359,7 +394,7 @@ async function renderAnimation() {
                 animation.render.push(string)
             } else if (key == parseInt(renderStep)) {
                 for (i in sprite.paths) {
-                    sprite.paths[i] = animation.keyframes[key].paths[i]
+                    sprite.paths[i] = JSON.parse(JSON.stringify((animation.keyframes[key].paths[i])))
                     sprite.updatePath(i)
                 }
                 let string;

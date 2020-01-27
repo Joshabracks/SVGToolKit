@@ -162,7 +162,7 @@ class Sprite {
     }
     loadState(state) {
         if (this.states[state]) {
-            this.paths = this.states[state]
+            this.paths = JSON.parse(JSON.stringify(this.states[state]))
             for (let path in this.paths) {
                 this.updatePath(path)
             }
