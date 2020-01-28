@@ -29,7 +29,19 @@ function loadSprite() {
             .then(svg => {
                 let newSprite = new Sprite(svg)
                 sprite = newSprite
-                populateSliders(sprite.paths[0])
+                let paths = sprite.xmlDoc.getElementsByTagName('svg')[0]
+                let i = 0;
+                let first = true
+                for (let node of paths.childNodes) {
+                    if (node.nodeName != '#text') {
+                        node.id = "path" + i
+                        i++
+                        if (first) {
+                            populateSliders(node)
+                            first = false
+                        }
+                    }
+                }
                 draw([sprite])
                 showTools()
             })
@@ -44,7 +56,6 @@ function loadSprite() {
         file.text()
             .then(spt => {
                 let data = JSON.parse(spt)
-                console.log(data)
                 sprite.paths = JSON.parse(JSON.stringify(data.paths))
                 sprite.animations = JSON.parse(JSON.stringify(data.animations))
                 sprite.states = JSON.parse(JSON.stringify(data.states))
@@ -70,25 +81,76 @@ function loadSprite() {
     }
 }
 
-function populateSliders(v) {
+function populateSliders(node) {
     let htmGo = ''
-    for (let i = 0; i < v.length; i++) {
-        if (v[i].number == true) {
-            htmGo += i + `<input type="range" min="-100" max="100" value="0" class="slider" id="` + i + `"><br>`
-        }
+    if (node.getAttribute('fill') != undefined) {
+        htmGo += `fill<input type="text" id="fill" value="` + node.getAttribute('fill') + `"><br>`
     }
-    document.getElementById('slidewrap').innerHTML = htmGo
-    for (let i = 0; i < v.length; i++) {
-        if (v[i].number == true) {
-            let slider = document.getElementById(i)
-            slider.oninput = function () {
-                let pathVal = parseFloat(sprite.originalPaths[0][i].value) + (this.value / 2)
-                sprite.paths[0][i].value = pathVal
-                sprite.updatePath(0)
-                draw([sprite])
+    if (node.getAttribute('stroke') != undefined) {
+        htmGo += `stroke<input type="text" id="stroke" value="` + node.getAttribute('stroke') + `"><br>`
+    }
+    if (node.getAttribute('stroke-meterlimit') != undefined) {
+        htmGo += `stroke-meterlimit<input type="text" id="stroke-meterlimit" value="` + node.getAttribute('stroke-meterlimit') + `"><br>`
+    }
+    if (node.getAttribute('x') != undefined) {
+        htmGo += `x<input type="range" min="-100" max="100" value="0" class="slider" id="x"><br>`
+    }
+    if (node.getAttribute('x1') != undefined) {
+        htmGo += `x1<input type="range" min="-100" max="100" value="0" class="slider" id="x1"><br>`
+    }
+    if (node.getAttribute('cx') != undefined) {
+        htmGo += `cx<input type="range" min="-100" max="100" value="0" class="slider" id="cx"><br>`
+    }
+    if (node.getAttribute('cy') != undefined) {
+        htmGo += `cy<input type="range" min="-100" max="100" value="0" class="slider" id="cy"><br>`
+    }
+    if (node.getAttribute('r') != undefined) {
+        htmGo += `r<input type="range" min="-100" max="100" value="0" class="slider" id="r"><br>`
+    }
+    if (node.getAttribute('rx') != undefined) {
+        htmGo += `rx<input type="range" min="-100" max="100" value="0" class="slider" id="rx"><br>`
+    }
+    if (node.getAttribute('ry') != undefined) {
+        htmGo += `ry<input type="range" min="-100" max="100" value="0" class="slider" id="ry"><br>`
+    }
+    if (node.getAttribute('x2') != undefined) {
+        htmGo += `x2<input type="range" min="-100" max="100" value="0" class="slider" id="x2"><br>`
+    }
+    if (node.getAttribute('y') != undefined) {
+        htmGo += `y<input type="range" min="-100" max="100" value="0" class="slider" id="y"><br>`
+    }
+    if (node.getAttribute('y1') != undefined) {
+        htmGo += `y1<input type="range" min="-100" max="100" value="0" class="slider" id="y1"><br>`
+    }
+    if (node.getAttribute('y2') != undefined) {
+        htmGo += `y2<input type="range" min="-100" max="100" value="0" class="slider" id="y2"><br>`
+    }
+    if (node.getAttribute('width') != undefined) {
+        `width<input type="range" min="-100" max="100" value="0" class="slider" id="width"><br>`
+    }
+    if (node.getAttribute('height') != undefined) {
+        `height<input type="range" min="-100" max="100" value="0" class="slider" id="height"><br>`
+    }
+    let v = node.keyMap
+    if (v != undefined) {
+        for (let i = 0; i < v.length; i++) {
+            if (v[i].number == true) {
+                htmGo += i + `<input type="range" min="-100" max="100" value="0" class="slider" id="` + i + `"><br>`
+            }
+        }
+        for (let i = 0; i < v.length; i++) {
+            if (v[i].number == true) {
+                let slider = document.getElementById(i)
+                slider.oninput = function () {
+                    let pathVal = parseFloat(v.originalPath[i].value) + (this.value / 2)
+                    v[i].value = pathVal
+                    sprite.updatePath(node)
+                    // draw([sprite])
+                }
             }
         }
     }
+    document.getElementById('slidewrap').innerHTML = htmGo
 }
 
 function resetSVG() {
