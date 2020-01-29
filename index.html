@@ -20,11 +20,17 @@
         <button class="tool button" onclick="newAnimation()">new Animation</button>
         <button class="tool button" onclick="downloadSprite()">save Sprite</button>
         <button class="tool button" onclick="saveState()">save State</button>
-        <div class="tool" style="display: none;">
-            <form onsubmit="renameSprite();return false">
+        <!-- <div class="tool" style="display: none;"> -->
+            <form class ="tool" onsubmit="renameSprite();return false">
                 <input type="text" name="spriteName" id="spriteName">
                 <button type="submit">Rename Sprite</button>
             </form>
+            <table style="width: 100%;">
+                <tr>
+                    <td id="pathTitle">Sprite Paths:</td>
+                    <td id="pathList"></td>
+                </tr>
+            </table>
         </div>
     </header>
     <aside>

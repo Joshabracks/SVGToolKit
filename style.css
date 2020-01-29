@@ -125,3 +125,7 @@ button:active {
 #animSlider{
     width: 100%;
 }
+
+#pathTitle{
+    width: 110px;
+}

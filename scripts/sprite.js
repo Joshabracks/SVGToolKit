@@ -10,7 +10,7 @@ class Sprite {
         this.animFrame = 0
         this.animKey = 0
         this.animate = false
-        // this.originalPaths = JSON.parse(JSON.stringify(this.paths))
+        this.originalPaths = s.serializeToString(this.xmlDoc)
         this.states = {}
         this.name = "sprite"
     }
@@ -21,16 +21,21 @@ class Sprite {
         let paths = {}
         for (let object of svg.childNodes) {
             if (object.tagName == 'path') {
-                object.keyMap = this.parsePath(object.getAttribute('d'))
-                if (object.originalPath) {
-                    object.originalPath = JSON.parse(JSON.stringify(object.keyMap))
+                object.setAttribute ('keyMap', JSON.stringify(this.parsePath(object.getAttribute('d'))))
+                if (object.getAttribute('originalPath') == undefined) {
+                    object.setAttribute("originalPath", object.getAttribute('keyMap'))
                 }
             }
             if (object.tagName == 'polygon' || object.tagName == 'polyline') {
-                object.keyMap = this.parsePath(object.getAttribute('points'))
-                if (object.originalPath) {
-                    object.originalPath = JSON.parse(JSON.stringify(object.keyMap))
+                object.setAttribute ('keyMap', JSON.stringify(this.parsePath(object.getAttribute('points'))))
+                if (object.getAttribute('originalPath') == undefined) {
+                    object.setAttribute("originalPath", object.getAttribute('keyMap'))
                 }
+            }
+            if (object.keyMap) {
+                let _keyMap = JSON.parse(object.getAttribute('keyMap'))
+                _keyMap.originalPath = JSON.parse(JSON.stringify(object.keyMap))
+                object.setAttribute('keyMap', JSON.stringify(_keyMap))
             }
 
         }
@@ -104,6 +109,9 @@ class Sprite {
     //     this.x = xstring.slice(0, xstring.length - 2)
     //     this.y = ystring.slice(0, ystring.length - 2)
     // }
+    resetSVG = () => {
+        this.xmlDoc = parser.parseFromString(this.originalPaths, 'text/xml')
+    }
     getSVG = () => {
         return new Promise((resolve, reject) => {
             for (let node of this.xmlDoc.getElementsByTagName('svg')[0].childNodes) {
@@ -152,7 +160,7 @@ class Sprite {
                     name: name,
                     length: length,
                     keyframes: {
-                        0: { timestamp: 0, paths: JSON.parse(JSON.stringify(this.paths)) }
+                        0: { timestamp: 0, paths: s.serializeToString(this.xmlDoc) }
                     },
                 }
                 return resolve(this.animations[name])
@@ -162,7 +170,7 @@ class Sprite {
         })
     }
     addKeyFrame = (animation, timestamp) => {
-        this.animations[animation].keyframes[parseInt(timestamp)] = { timestamp: parseInt(timestamp), paths: JSON.parse(JSON.stringify(this.paths)) }
+        this.animations[animation].keyframes[parseInt(timestamp)] = { timestamp: parseInt(timestamp), paths: s.serializeToString(this.xmlDoc) }
         // let kf = this.orderKeyFrames(this.animations[animation].keyframes)
         return this.animations[animation]
     }
@@ -217,15 +225,15 @@ class Sprite {
         }
     }
     saveState() {
-        let newState = JSON.parse(JSON.stringify(this.paths))
+        let newState = s.serializeToString(this.xmlDoc)
         this.states[Object.keys(this.states).length] = newState
     }
     loadState(state) {
         if (this.states[state]) {
-            this.paths = JSON.parse(JSON.stringify(this.states[state]))
-            for (let path in this.paths) {
-                this.updatePath(path)
-            }
+            this.xmlDoc = parser.parseFromString(this.states[state], "text/xml")
+            // for (let path in this.paths) {
+            //     this.updatePath(path)
+            // }
             this.updateImage()
         } else {
             alert("State of " + state + " does not exist.")

@@ -3,7 +3,7 @@
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
 let height = window.innerHeight
-let width = window.innerWidth * 0.70
+let width = window.innerWidth * 0.80
 ctx.canvas.height = height
 ctx.canvas.width = width
 
@@ -13,6 +13,7 @@ let selectedKey = false;
 let lastFrame = Date.now()
 let playing = false;
 let render = false;
+let drawingQ = []
 
 document.getElementById("file").onchange = function () {
     document.getElementById("spriteForm").onsubmit()
@@ -32,9 +33,11 @@ function loadSprite() {
                 let paths = sprite.xmlDoc.getElementsByTagName('svg')[0]
                 let i = 0;
                 let first = true
+                let htmGo = ''
                 for (let node of paths.childNodes) {
                     if (node.nodeName != '#text') {
-                        node.id = "path" + i
+                        node.setAttribute('id', "path" + i)
+                        htmGo += `<button onclick="populateSlidersById('` + node.id + `')">` + i + `</button>`
                         i++
                         if (first) {
                             populateSliders(node)
@@ -42,6 +45,7 @@ function loadSprite() {
                         }
                     }
                 }
+                document.getElementById('pathList').innerHTML = htmGo
                 draw([sprite])
                 showTools()
             })
@@ -81,56 +85,82 @@ function loadSprite() {
     }
 }
 
+function populateSlidersById(id) {
+    let node = sprite.xmlDoc.getElementById(id)
+    populateSliders(node)
+}
+
 function populateSliders(node) {
     let htmGo = ''
+    let idList = []
     if (node.getAttribute('fill') != undefined) {
         htmGo += `fill<input type="text" id="fill" value="` + node.getAttribute('fill') + `"><br>`
+        idList.push('fill')
     }
     if (node.getAttribute('stroke') != undefined) {
         htmGo += `stroke<input type="text" id="stroke" value="` + node.getAttribute('stroke') + `"><br>`
+        idList.push('stroke')
     }
     if (node.getAttribute('stroke-meterlimit') != undefined) {
         htmGo += `stroke-meterlimit<input type="text" id="stroke-meterlimit" value="` + node.getAttribute('stroke-meterlimit') + `"><br>`
+        idList.push('stroke-meterlimit')
     }
     if (node.getAttribute('x') != undefined) {
-        htmGo += `x<input type="range" min="-100" max="100" value="0" class="slider" id="x"><br>`
+        htmGo += `x<input type="range" min="-1000" max="1000" value="` + node.getAttribute('x') + `" class="slider" id="x"><br>`
+        idList.push('x')
     }
     if (node.getAttribute('x1') != undefined) {
-        htmGo += `x1<input type="range" min="-100" max="100" value="0" class="slider" id="x1"><br>`
+        htmGo += `x1<input type="range" min="-1000" max="1000" value="` + node.getAttribute('x1') + `" class="slider" id="x1"><br>`
+        idList.push('x1')
     }
     if (node.getAttribute('cx') != undefined) {
-        htmGo += `cx<input type="range" min="-100" max="100" value="0" class="slider" id="cx"><br>`
+        htmGo += `cx<input type="range" min="-1000" max="1000" value="` + node.getAttribute('cx') + `" class="slider" id="cx"><br>`
+        idList.push('cx')
     }
     if (node.getAttribute('cy') != undefined) {
-        htmGo += `cy<input type="range" min="-100" max="100" value="0" class="slider" id="cy"><br>`
+        htmGo += `cy<input type="range" min="-1000" max="1000" value="` + node.getAttribute('cy') + `" class="slider" id="cy"><br>`
+        idList.push('cy')
     }
     if (node.getAttribute('r') != undefined) {
-        htmGo += `r<input type="range" min="-100" max="100" value="0" class="slider" id="r"><br>`
+        htmGo += `r<input type="range" min="-1000" max="1000" value="` + node.getAttribute('r') + `" class="slider" id="r"><br>`
+        idList.push('r')
     }
     if (node.getAttribute('rx') != undefined) {
-        htmGo += `rx<input type="range" min="-100" max="100" value="0" class="slider" id="rx"><br>`
+        htmGo += `rx<input type="range" min="-1000" max="1000" value="` + node.getAttribute('rx') + `" class="slider" id="rx"><br>`
+        idList.push('rx')
     }
     if (node.getAttribute('ry') != undefined) {
-        htmGo += `ry<input type="range" min="-100" max="100" value="0" class="slider" id="ry"><br>`
+        htmGo += `ry<input type="range" min="-1000" max="1000" value="` + node.getAttribute('ry') + `" class="slider" id="ry"><br>`
+        idList.push('ry')
     }
     if (node.getAttribute('x2') != undefined) {
-        htmGo += `x2<input type="range" min="-100" max="100" value="0" class="slider" id="x2"><br>`
+        htmGo += `x2<input type="range" min="-1000" max="1000" value="` + node.getAttribute('x2') + `" class="slider" id="x2"><br>`
+        idList.push('x2')
     }
     if (node.getAttribute('y') != undefined) {
-        htmGo += `y<input type="range" min="-100" max="100" value="0" class="slider" id="y"><br>`
+        htmGo += `y<input type="range" min="-1000" max="1000" value="` + node.getAttribute('y') + `" class="slider" id="y"><br>`
+        idList.push('y')
     }
     if (node.getAttribute('y1') != undefined) {
-        htmGo += `y1<input type="range" min="-100" max="100" value="0" class="slider" id="y1"><br>`
+        htmGo += `y1<input type="range" min="-1000" max="1000" value="` + node.getAttribute('y1') + `" class="slider" id="y1"><br>`
+        idList.push('y1')
     }
     if (node.getAttribute('y2') != undefined) {
-        htmGo += `y2<input type="range" min="-100" max="100" value="0" class="slider" id="y2"><br>`
+        htmGo += `y2<input type="range" min="-1000" max="1000" value="` + node.getAttribute('y2') + `" class="slider" id="y2"><br>`
+        idList.push('y2')
     }
     if (node.getAttribute('width') != undefined) {
-        `width<input type="range" min="-100" max="100" value="0" class="slider" id="width"><br>`
+        htmGo += `width<input type="range" min="-1000" max="1000" value="` + node.getAttribute('width') + `" class="slider" id="width"><br>`
+        idList.push('width')
     }
     if (node.getAttribute('height') != undefined) {
-        `height<input type="range" min="-100" max="100" value="0" class="slider" id="height"><br>`
+        htmGo += `height<input type="range" min="-1000" max="1000" value="` + node.getAttribute('height') + `" class="slider" id="height"><br>`
+        idList.push('height')
     }
+    if (!node.keyMap) {
+        node.keyMap = JSON.parse(node.getAttribute('keyMap'))
+    }
+
     let v = node.keyMap
     if (v != undefined) {
         for (let i = 0; i < v.length; i++) {
@@ -138,35 +168,59 @@ function populateSliders(node) {
                 htmGo += i + `<input type="range" min="-100" max="100" value="0" class="slider" id="` + i + `"><br>`
             }
         }
+        document.getElementById('slidewrap').innerHTML = htmGo
         for (let i = 0; i < v.length; i++) {
             if (v[i].number == true) {
                 let slider = document.getElementById(i)
+                slider.setAttribute('nodeId', node.id)
                 slider.oninput = function () {
-                    let pathVal = parseFloat(v.originalPath[i].value) + (this.value / 2)
+                    // console.log(this.getAttribute('nodeId'))
+                    let thisNode = sprite.xmlDoc.getElementById(this.getAttribute('nodeId'))
+                    // console.log(thisNode)
+                    let orig  = JSON.parse(thisNode.getAttribute('originalPath'))
+                    // console.log(thisNode.getAttribute('originalPath'))
+                    // console.log("ORIGINAL: ", orig)
+                    let pathVal = parseFloat(orig[i].value) + (this.value / 2)
                     v[i].value = pathVal
-                    sprite.updatePath(node)
-                    // draw([sprite])
+                    // sprite.updatePath(node)
+                    thisNode.setAttribute('keyMap', JSON.stringify(thisNode.keyMap))
+                    // thisNode.keyMap = keyMap;
+                    draw([sprite])
                 }
             }
         }
+        node.setAttribute('keyMap', JSON.stringify(node.keyMap))
+    } else {
+        document.getElementById('slidewrap').innerHTML = htmGo
     }
-    document.getElementById('slidewrap').innerHTML = htmGo
+    
+    if (idList.length > 0) {
+        for (let id of idList) {
+            let elem = document.getElementById(id)
+            elem.oninput = function () {
+                node.setAttribute(id, this.value)
+                draw([sprite])
+            }
+        }
+    }
 }
 
 function resetSVG() {
-    for (let i = 0; i < sprite.paths[0].length; i++) {
-        if (sprite.paths[0][i].number) {
-            let slider = document.getElementById(i)
-            slider.value = 0
-            let pathVal = parseFloat(sprite.originalPaths[0][i].value) + (slider.value / 2)
-            sprite.paths[0][i].value = pathVal
-            sprite.updatePath(0)
-        }
-    }
+    sprite.resetSVG()
+    // for (let i = 0; i < sprite.paths[0].length; i++) {
+    //     if (sprite.paths[0][i].number) {
+    //         let slider = document.getElementById(i)
+    //         slider.value = 0
+    //         let pathVal = parseFloat(sprite.originalPaths[0][i].value) + (slider.value / 2)
+    //         sprite.paths[0][i].value = pathVal
+    //         sprite.updatePath(0)
+    //     }
+    // }
     draw([sprite])
 }
 
 async function draw(sprites) {
+    drawingQ = sprites
     let drawQ = []
     ctx.fillStyle = 'white';
     for (let sprite of sprites) {
@@ -188,7 +242,8 @@ function newAnimation() {
             animation = data;
             loadAnimation(data)
         })
-        .catch(err => alert(err))
+        .catch(console.log)
+        // .catch(err => alert(err))
 }
 
 function loadAnimation(anim) {
@@ -501,4 +556,12 @@ function moveKey() {
     animation.keyframes[sliderVal] = newKey
     delete animation.keyframes[value]
     loadAnimation(animation)
+}
+
+window.onresize = () => {
+    height = window.innerHeight
+    width = window.innerWidth * 0.80
+    ctx.canvas.height = height
+    ctx.canvas.width = width
+    draw(drawingQ)
 }
