@@ -230,6 +230,7 @@ async function draw(sprites) {
     for (let sprite of sprites) {
         await sprite.getSVG()
             .then(data => {
+                console.log(data)
                 drawQ.push(data)
             })
             .catch(console.log)
