@@ -6,7 +6,6 @@ class Sprite {
         this.animations = {}
         this.parseSVG(string)
         this.image = this.updateImage(string)
-        this.animations = {}
         this.animFrame = 0
         this.animKey = 0
         this.animate = false
@@ -234,7 +233,7 @@ class Sprite {
             // for (let path in this.paths) {
             //     this.updatePath(path)
             // }
-            this.updateImage()
+            // this.updateImage()
         } else {
             alert("State of " + state + " does not exist.")
         }

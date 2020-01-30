@@ -8,6 +8,7 @@ ctx.canvas.height = height
 ctx.canvas.width = width
 
 let sprite = false;
+let spriter = false;
 let animation = false;
 let selectedKey = false;
 let lastFrame = Date.now()
@@ -29,6 +30,9 @@ function loadSprite() {
         file.text()
             .then(svg => {
                 let newSprite = new Sprite(svg)
+                let newSpriter = new XMLSprite(svg) 
+                spriter = newSpriter
+                console.log(newSpriter)
                 sprite = newSprite
                 let paths = sprite.xmlDoc.getElementsByTagName('svg')[0]
                 let i = 0;
