@@ -92,7 +92,7 @@ class XMLSprite {
         })
     }
     loadState = (stateNumber) => {
-        this.xmlDoc.getElementsByTagName('currentImage')[0].replaceChild(this.states.getElementsByTagName('svg')[stateNumber].cloneNode(true), this.image)
+        this.image = this.states.getElementsByTagName('svg')[stateNumber]
         return this.getSVG()
     }
     reset = () => {
