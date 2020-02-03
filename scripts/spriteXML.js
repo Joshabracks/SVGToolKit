@@ -1,5 +1,5 @@
-// const parser = new DOMParser();
-// const s = new XMLSerializer()
+const parser = new DOMParser();
+const s = new XMLSerializer()
 // const canvas = document.getElementById('canvas')
 // const ctx = canvas.getContext('2d')
 // let height = window.innerHeight
@@ -23,8 +23,8 @@ class XMLSprite {
     animations;
     original;
     image;
-    x: number;
-    y: number;
+    x;
+    y;
     drawImage;
     currentAnimation;
     constructor(string, x = 0, y = 0) {
@@ -177,11 +177,11 @@ class XMLSprite {
             }
         }
     }
-    inbetweenFrame = (frame: number) => {
-        function colorValues(color: string) {
-            let val1: number;
-            let val2: number;
-            let val3: number;
+    inbetweenFrame = (frame) => {
+        function colorValues(color) {
+            let val1;
+            let val2;
+            let val3;
             if (color[0] === '#') {
                 if (color.length == 7) {
                     val1 = parseInt(color[1] + color[2], 16)
@@ -271,6 +271,16 @@ class XMLSprite {
                             path.setAttribute(attr.name, color)
                         } else if (attr.name === 'x' || attr.name === 'y' || attr.name === 'x1' || attr.name === 'y1' || attr.name === 'x2' || attr.name === 'y2' || attr.name === 'stroke-meterlimit' || attr.name === 'cx' || attr.name === 'cy' || attr.name === 'r' || attr.name === 'rx' || attr.name === 'ry' || attr.name === 'width' || attr.name === 'height') {
                             attr.value = botAttributes[i].value + ((topAttributes[i].value - botAttributes[i].value) * percent)
+                        } else if (attr.name === 'd' || attr.name === 'points') {
+                            let keys = this.parsePath(attr.value)
+                            let topKeys = this.parsePath(topAttributes[i].value)
+                            let botKeys = this.parsePath(botAttributes[i].value)
+                            for ( let i = 0; i < keys.length; i++) {
+                                if ( keys[i].number ) {
+                                    keys[i].value = botKeys[i].value + ((topKeys[i].value - botKeys[i].value) * percent)
+                                }
+                                attr.value = this.buildPath(keys)
+                            }
                         }
                     }
                 }
@@ -278,8 +288,36 @@ class XMLSprite {
         }
         return midFrame
     }
-    getFrame = (frame: number) => {
+    getFrame = (frame) => {
         this.image = this.inbetweenFrame(frame)
         this.setSVG()
+    }
+    parsePath(string) {
+        let key = []
+        let val = ''
+        for (let ch of string) {
+            if (ch == 'M' || ch == 'm' || ch == 'L' || ch == 'l' || ch == 'H' || ch == 'h' || ch == 'V' || ch == 'v' || ch == 'Z' || ch == 'z' || ch == ',' || ch == ' ' || ch == 'C' || ch == 'c' || ch == 'S' || ch == 's') {
+                if (val.length > 0) {
+                    key.push({ number: true, value: val })
+                    val = ''
+                }
+                key.push({ number: false, value: ch })
+            } else if (ch == '-') {
+                if (val.length > 0) {
+                    key.push({ number: true, value: val })
+                    val = ch
+                }
+            } else {
+                val += ch
+            }
+        }
+        return key
+    }
+    buildPath(keys) {
+        let path = ''
+        for ( let i = 0; i < keys.length; i++) {
+            path += keys[i].value
+        }
+        return path
     }
 }
