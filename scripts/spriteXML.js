@@ -108,7 +108,12 @@ class XMLSprite {
         return this.getSVG()
     }
     reset = () => {
-        this.xmlDoc.getElementsByTagName('original')[0].replaceChild(this.states.getElementsByTagName('svg')[0].cloneNode(true), this.image)
+        for ( let child of this.image.childNodes ) {
+            this.image.removeChild(child)
+        }
+        for (let child of this.original.getElementsByTagName('svg')[0].childNodes) {
+            this.image.appendChild(child.cloneNode(true))
+        }
         return this.getSVG()
     }
     rename = (name) => {

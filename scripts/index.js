@@ -184,7 +184,7 @@ function populateSliders(node) {
 }
 
 function resetSVG() {
-    sprite.resetSVG()
+    sprite.reset()
     // for (let i = 0; i < sprite.paths[0].length; i++) {
     //     if (sprite.paths[0][i].number) {
     //         let slider = document.getElementById(i)
