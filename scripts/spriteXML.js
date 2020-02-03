@@ -30,15 +30,19 @@ class XMLSprite {
     constructor(string, x = 0, y = 0) {
         let doc = parser.parseFromString(string, 'text/xml')
         let tempImage;
+        console.log(doc)
         if (doc.documentElement.getAttribute("type") === 'sprite') {
             this.xmlDoc = doc
             this.root = this.xmlDoc.documentElement
             this.states = this.xmlDoc.getElementsByTagName('states')[0]
             this.animations = this.xmlDoc.getElementsByTagName('animations')[0]
             this.original = this.xmlDoc.getElementsByTagName('original')[0]
+            this.name = this.xmlDoc.documentElement.getAttribute('name')
         } else {
+            doc.documentElement.setAttribute('type', 'sprite')
             this.xmlDoc = parser.parseFromString(xmlTemplate, 'text/xml')
             tempImage = doc.getElementsByTagName('svg')[0]
+            tempImage.setAttribute('name', '0')
             this.root = this.xmlDoc.documentElement
             this.states = this.xmlDoc.getElementsByTagName('states')[0]
             this.animations = this.xmlDoc.getElementsByTagName('animations')[0]
@@ -88,6 +92,8 @@ class XMLSprite {
     saveState = () => {
         return new Promise((resolve, reject) => {
             this.states.appendChild(this.image.cloneNode(true))
+            let states = this.states.getElementsByTagName('svg')
+            states[states.length - 1].setAttribute('name', states.length - 1)
             return resolve(this.states.getElementsByTagName('svg')[this.states.getElementsByTagName('svg').length - 1])
         })
     }
@@ -120,7 +126,7 @@ class XMLSprite {
         let url = window.URL.createObjectURL(blob)
         let a = document.createElement('a')
         a.href = url
-        a.download = this.root.getAttribute('name') + '.xml'
+        a.download = this.root.getAttribute('name') + '.spt'
         a.click()
         window.URL.revokeObjectURL(url)
     }

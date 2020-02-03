@@ -47,6 +47,7 @@ function loadSprite() {
             document.getElementById('pathList').innerHTML = htmGo
             draw([sprite])
             showTools()
+            stateSelect()
         })
         .catch(console.log)
 }
@@ -318,13 +319,7 @@ function deleteKeyFrame() {
 
 function downloadSprite() {
     if (sprite) {
-        let blob = new Blob([JSON.stringify(sprite, undefined, 2)], { type: "application/json" })
-        let url = window.URL.createObjectURL(blob)
-        let a = document.createElement('a')
-        a.href = url
-        a.download = sprite.name + '.spt'
-        a.click()
-        window.URL.revokeObjectURL(url)
+        sprite.saveSprite()
 
     } else {
         alert("No Sprite is Loaded")
@@ -340,7 +335,7 @@ function stateSelect() {
     let htmGo = ''
     let states = sprite.states.getElementsByTagName('svg')
     for ( let i = 0; i < states.length; i++ ) {
-        htmGo += `<button onclick="loadState(` + i + `)">` + i + `</button>`
+        htmGo += `<button onclick="loadState(` + i + `)">` + states[i].getAttribute('name') + `</button>`
     }
     document.getElementById('states').innerHTML = htmGo
 }
@@ -372,9 +367,7 @@ function showTools() {
 }
 
 function renameSprite() {
-    sprite.name = document.getElementById('spriteName').value
-    alert("Sprite name changed to " + sprite.name)
-    return 'success'
+    sprite.rename(document.getElementById('spriteName').value)
 }
 
 // function play() {
