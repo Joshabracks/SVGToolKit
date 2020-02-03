@@ -67,10 +67,10 @@ function populateSliders(node) {
         htmGo += `stroke<input type="text" id="stroke" value="` + node.getAttribute('stroke') + `"><br>`
         idList.push('stroke')
     }
-    if (node.getAttribute('stroke-meterlimit') != undefined) {
-        htmGo += `stroke-meterlimit<input type="text" id="stroke-meterlimit" value="` + node.getAttribute('stroke-meterlimit') + `"><br>`
-        idList.push('stroke-meterlimit')
-    }
+    // if (node.getAttribute('stroke-miterlimit') != undefined) {
+    //     htmGo += `stroke-miterlimit<input type="text" id="stroke-miterlimit" value="` + node.getAttribute('stroke-miterlimit') + `"><br>`
+    //     idList.push('stroke-miterlimit')
+    // }
     if (node.getAttribute('x') != undefined) {
         htmGo += `x<input type="range" min="-1000" max="1000" value="` + node.getAttribute('x') + `" class="slider" id="x"><br>`
         idList.push('x')
@@ -127,11 +127,17 @@ function populateSliders(node) {
         node.keyMap = JSON.parse(node.getAttribute('keyMap'))
     }
     let v = false;
-    if ( node.getAttribute('d') != undefined ) {
+    if (node.getAttribute('d') != undefined) {
         v = sprite.parsePath(node.getAttribute('d'))
+        if (node.getAttribute('oPath') == undefined) {
+            node.setAttribute('oPath', node.getAttribute('d'))
+        }
     }
     if (node.getAttribute('points') != undefined) {
         v = sprite.parsePath(node.getAttribute('points'))
+        if (node.getAttribute('oPath') == undefined) {
+            node.setAttribute('oPath', node.getAttribute('points'))
+        }
     }
     if (v != false) {
         for (let i = 0; i < v.length; i++) {
@@ -147,11 +153,15 @@ function populateSliders(node) {
                 slider.oninput = function () {
                     // USE sprite.parsePath() and sprite.buildPath() to update paths
                     let thisNode = sprite.xmlDoc.getElementById(this.getAttribute('nodeId'))
-                    console.log(thisNode)
-                    let orig = JSON.parse(thisNode.getAttribute('originalPath'))
+                    let orig = sprite.parsePath(thisNode.getAttribute('oPath'))
                     let pathVal = parseFloat(orig[i].value) + (this.value / 2)
                     v[i].value = pathVal
-                    thisNode.setAttribute('keyMap', JSON.stringify(thisNode.keyMap))
+                    if (thisNode.getAttribute('d') != undefined) {
+                        thisNode.setAttribute('d', sprite.buildPath(v))
+                    } else if (thisNode.getAttribute('points') != undefined) {
+                        thisNode.setAttribute('points', sprite.buildPath(v))
+                    }
+                    // console.log(thisNode.getAttribute('points'))
                     draw([sprite])
                 }
             }
@@ -193,7 +203,7 @@ async function draw(sprites) {
     for (let sprite of sprites) {
         await sprite.getSVG()
             .then(data => {
-                console.log(data)
+                // console.log(data)
                 drawQ.push(data)
             })
             .catch(console.log)

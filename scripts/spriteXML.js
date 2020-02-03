@@ -269,7 +269,7 @@ class XMLSprite {
                             }
                             color += ')'
                             path.setAttribute(attr.name, color)
-                        } else if (attr.name === 'x' || attr.name === 'y' || attr.name === 'x1' || attr.name === 'y1' || attr.name === 'x2' || attr.name === 'y2' || attr.name === 'stroke-meterlimit' || attr.name === 'cx' || attr.name === 'cy' || attr.name === 'r' || attr.name === 'rx' || attr.name === 'ry' || attr.name === 'width' || attr.name === 'height') {
+                        } else if (attr.name === 'x' || attr.name === 'y' || attr.name === 'x1' || attr.name === 'y1' || attr.name === 'x2' || attr.name === 'y2' || attr.name === 'stroke-miterlimit' || attr.name === 'cx' || attr.name === 'cy' || attr.name === 'r' || attr.name === 'rx' || attr.name === 'ry' || attr.name === 'width' || attr.name === 'height') {
                             attr.value = botAttributes[i].value + ((topAttributes[i].value - botAttributes[i].value) * percent)
                         } else if (attr.name === 'd' || attr.name === 'points') {
                             let keys = this.parsePath(attr.value)
