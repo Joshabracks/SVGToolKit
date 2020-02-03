@@ -66,12 +66,12 @@ class XMLSprite {
     }
     setSVG = () => {
         const blob = new Blob([s.serializeToString(this.image)], { type: 'image/svg+xml' })
-            const url = window.URL.createObjectURL(blob)
-            const image = new Image(parseFloat(this.image.getAttribute('width')), parseFloat(this.image.getAttribute('height')))
-            image.src = url
-            image.onload = () => {
-                this.drawImage = image
-            }
+        const url = window.URL.createObjectURL(blob)
+        const image = new Image(parseFloat(this.image.getAttribute('width')), parseFloat(this.image.getAttribute('height')))
+        image.src = url
+        image.onload = () => {
+            this.drawImage = image
+        }
     }
     draw = () => {
         const blob = new Blob([s.serializeToString(this.image)], { type: 'image/svg+xml' })
@@ -92,7 +92,13 @@ class XMLSprite {
         })
     }
     loadState = (stateNumber) => {
-        this.image = this.states.getElementsByTagName('svg')[stateNumber]
+        // this.image.parentNode.replaceChild(this.states.getElementsByTagName('svg')[stateNumber].cloneNode(true), this.image)
+        for ( let child of this.image.childNodes ) {
+            this.image.removeChild(child)
+        }
+        for (let child of this.states.getElementsByTagName('svg')[stateNumber].childNodes) {
+            this.image.appendChild(child.cloneNode(true))
+        }
         return this.getSVG()
     }
     reset = () => {
@@ -275,8 +281,8 @@ class XMLSprite {
                             let keys = this.parsePath(attr.value)
                             let topKeys = this.parsePath(topAttributes[i].value)
                             let botKeys = this.parsePath(botAttributes[i].value)
-                            for ( let i = 0; i < keys.length; i++) {
-                                if ( keys[i].number ) {
+                            for (let i = 0; i < keys.length; i++) {
+                                if (keys[i].number) {
                                     keys[i].value = botKeys[i].value + ((topKeys[i].value - botKeys[i].value) * percent)
                                 }
                                 attr.value = this.buildPath(keys)
@@ -315,7 +321,7 @@ class XMLSprite {
     }
     buildPath(keys) {
         let path = ''
-        for ( let i = 0; i < keys.length; i++) {
+        for (let i = 0; i < keys.length; i++) {
             path += keys[i].value
         }
         return path

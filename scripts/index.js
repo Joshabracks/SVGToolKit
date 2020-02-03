@@ -339,7 +339,6 @@ function saveState() {
 function stateSelect() {
     let htmGo = ''
     let states = sprite.states.getElementsByTagName('svg')
-    console.log(states)
     for ( let i = 0; i < states.length; i++ ) {
         htmGo += `<button onclick="loadState(` + i + `)">` + i + `</button>`
     }
