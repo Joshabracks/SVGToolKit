@@ -216,24 +216,19 @@ async function draw(sprites) {
 }
 
 function newAnimation() {
-    sprite.newAnimation(Object.keys(sprite.animations).length)
-        .then(data => {
-            animation = data;
-            loadAnimation(data)
-        })
-        .catch(console.log)
-    // .catch(err => alert(err))
+    sprite.newAnimation(1000)
+    animationSelect()
 }
 
 function loadAnimation(anim) {
     let footer = document.getElementById('footer')
     let htmGo = ''
     htmGo += "<div id='keyFrames'>"
-    for (key in anim.keyframes) {
-        htmGo += "<button onclick='selectKeyFrame(event)'class='keyFrame' id='key" + anim.keyframes[key].timestamp + "' style='left:" + (anim.keyframes[key].timestamp / anim.length) * 99 + "%;'></button>"
+    for (let frame of anim.getElementsByTagName('keyFrames')[0].getElementsByTagName('svg')) {
+        htmGo += "<button onclick='selectKeyFrame(event)'class='keyFrame' id='key" + frame.getAttribute('frame') + "' style='left:" + (frame.getAttribute('frame') / anim.getAttribute('length')) * 99 + "%;'></button>"
     }
     htmGo += "</div>"
-    htmGo += `<input type="range" min="0" max="` + anim.length + `" value="0" class="slider" id="animSlider"></input>`
+    htmGo += `<input type="range" min="0" max="` + anim.getAttribute('length') + `" value="0" class="slider" id="animSlider"></input>`
     htmGo += `<br><button onclick='addKeyFrame()'>new key frame</button>  <button onclick='deleteKeyFrame()'>delete keyframe</button>  <button onclick="play()">play</button>  <button onclick="stop()">stop</button>  <button onclick="moveKey()">move key frame</button>`
     footer.innerHTML = htmGo
     const slider = document.getElementById('animSlider')
@@ -246,7 +241,7 @@ function loadAnimation(anim) {
     }
     animationSelect()
     render = false;
-    sprite.animFrame = 0
+    // sprite.animFrame = 0
     slider.value = 0;
 }
 
@@ -255,55 +250,77 @@ function reloadAnim() {
 }
 
 function loadFrame(ts) {
-    let slider = document.getElementById('animSlider')
-    let lowFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
-    let hiFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
-    for (key in animation.keyframes) {
-        lowFrame = hiFrame
-        hiFrame = JSON.parse(JSON.stringify(animation.keyframes[key]))
-        if (ts > lowFrame.timestamp && ts < hiFrame.timestamp) {
-            for (i in sprite.paths) {
-                let path = sprite.paths[i]
-                for (j in path) {
-                    if (path[j].number) {
-                        let frameDiff = hiFrame.timestamp - lowFrame.timestamp
-                        let tsDiff = ts - lowFrame.timestamp
-                        let percent = parseFloat(tsDiff / frameDiff).toFixed(2)
-                        let diff = parseFloat(lowFrame.paths[i][j].value) + ((hiFrame.paths[i][j].value - lowFrame.paths[i][j].value) * percent)
-                        path[j].value = diff
-                    }
-                }
-                sprite.updatePath(i)
+    sprite.getFrame(ts)
+    let paths = sprite.image
+    let i = 0;
+    let first = true
+    let htmGo = ''
+    for (let node of paths.childNodes) {
+        if (node.nodeName != '#text') {
+            node.setAttribute('id', "path" + i)
+            htmGo += `<button onclick="populateSlidersById('` + node.id + `')">` + i + `</button>`
+            i++
+            if (first) {
+                populateSliders(node)
+                first = false
             }
-            sprite.updateImage()
-            draw([sprite])
         }
-        if (key == parseInt(ts)) {
-            slider.value = ts;
-            for (i in sprite.paths) {
-                sprite.paths[i] = animation.keyframes[key].paths[i]
-                sprite.updatePath(i)
-            }
-            sprite.updateImage()
-            draw([sprite])
-            return
-        }
+    }
+    document.getElementById('pathList').innerHTML = htmGo
+    draw([sprite])
+    showTools()
+    stateSelect()
 
-    }
-    render = false;
-    playing = false;
-    if (player) {
-        clearInterval(player)
-    }
+    // let slider = document.getElementById('animSlider')
+    // let lowFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
+    // let hiFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
+    // for (key in animation.keyframes) {
+    //     lowFrame = hiFrame
+    //     hiFrame = JSON.parse(JSON.stringify(animation.keyframes[key]))
+    //     if (ts > lowFrame.timestamp && ts < hiFrame.timestamp) {
+    //         for (i in sprite.paths) {
+    //             let path = sprite.paths[i]
+    //             for (j in path) {
+    //                 if (path[j].number) {
+    //                     let frameDiff = hiFrame.timestamp - lowFrame.timestamp
+    //                     let tsDiff = ts - lowFrame.timestamp
+    //                     let percent = parseFloat(tsDiff / frameDiff).toFixed(2)
+    //                     let diff = parseFloat(lowFrame.paths[i][j].value) + ((hiFrame.paths[i][j].value - lowFrame.paths[i][j].value) * percent)
+    //                     path[j].value = diff
+    //                 }
+    //             }
+    //             sprite.updatePath(i)
+    //         }
+    //         sprite.updateImage()
+    //         draw([sprite])
+    //     }
+    //     if (key == parseInt(ts)) {
+    //         slider.value = ts;
+    //         for (i in sprite.paths) {
+    //             sprite.paths[i] = animation.keyframes[key].paths[i]
+    //             sprite.updatePath(i)
+    //         }
+    //         sprite.updateImage()
+    //         draw([sprite])
+    //         return
+    //     }
+
+    // }
+    // render = false;
+    // playing = false;
+    // if (player) {
+    //     clearInterval(player)
+    // }
 }
 
 function addKeyFrame() {
     let slider = document.getElementById('animSlider')
     let value = JSON.parse(JSON.stringify(slider.value))
-    animation = sprite.addKeyFrame(animation.name, value)
-    loadAnimation(animation)
+    sprite.addKeyFrame(value)
+    loadAnimation(sprite.currentAnimation)
     document.getElementById('animSlider').value = value
     stateSelect()
+    animationSelect()
     render = false;
 }
 
@@ -334,7 +351,7 @@ function saveState() {
 function stateSelect() {
     let htmGo = ''
     let states = sprite.states.getElementsByTagName('svg')
-    for ( let i = 0; i < states.length; i++ ) {
+    for (let i = 0; i < states.length; i++) {
         htmGo += `<button onclick="loadState(` + i + `)">` + states[i].getAttribute('name') + `</button>`
     }
     document.getElementById('states').innerHTML = htmGo
@@ -342,15 +359,15 @@ function stateSelect() {
 
 function animationSelect() {
     let htmGo = ''
-    for (anim in sprite.animations) {
-        htmGo += `<button onclick="animLoad(` + anim + `)">` + anim + `</button>`
+    for (let anim of sprite.animations.getElementsByTagName('animation')) {
+        htmGo += `<button onclick="animLoad(` + anim.getAttribute('name') + `)">` + anim.getAttribute('name') + `</button>`
     }
     document.getElementById('animations').innerHTML = htmGo
 }
 
 function animLoad(id) {
-    animation = sprite.animations[id]
-    loadAnimation(animation)
+    sprite.currentAnimation = sprite.animations.getElementsByTagName('animation')[id]
+    loadAnimation(sprite.currentAnimation)
 }
 
 function loadState(state) {

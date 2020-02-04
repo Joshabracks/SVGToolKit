@@ -137,6 +137,7 @@ class XMLSprite {
     }
     newAnimation = (length = 1000) => {
         let newAnimation = this.xmlDoc.createElement('animation')
+        newAnimation.setAttribute('name', this.animations.getElementsByTagName('animation').length)
         this.animations.appendChild(newAnimation)
         newAnimation.setAttribute('length', length)
         newAnimation.setAttribute('frame', 0)
@@ -145,12 +146,13 @@ class XMLSprite {
         let keyFrameZero = this.image.cloneNode(true)
         keyFrameZero.setAttribute('frame', '0')
         keyFrames.appendChild(keyFrameZero)
+        newAnimation.appendChild(keyFrames)
         this.currentAnimation = newAnimation
     }
-    addKeyframe = (frame) => {
+    addKeyFrame = (frame) => {
         let newKeyFrame = this.image.cloneNode(true)
         newKeyFrame.setAttribute('frame', frame)
-        this.currentAnimation.getElementsByTagName('keyframes')[0].appendChild(newKeyFrame)
+        this.currentAnimation.getElementsByTagName('keyFrames')[0].appendChild(newKeyFrame)
         this.orderKeyFrames()
     }
     orderKeyFrames = () => {
@@ -173,21 +175,26 @@ class XMLSprite {
                 }
             }
             pivot = [pivot]
-            return pivot.append(sort(less).append(sort(more)))
+            return pivot.concat(sort(less)).concat(sort(more))
         }
-        let keyframes = this.currentAnimation.getElementsByTagName('keyframes')[0].getElementsByTagName('svg')
+        let keyframes = this.currentAnimation.getElementsByTagName('keyFrames')[0].getElementsByTagName('svg')
         let sorter = []
         for (let frame of keyframes) {
             sorter.push(frame)
-            this.currentAnimation.getElementsByTagName('keyframes')[0].removeChild(frame)
         }
+        for (let frame of keyframes) {
+            this.currentAnimation.getElementsByTagName('keyFrames')[0].removeChild(frame)
+        }
+        console.log(keyframes)
+        console.log(sorter)
         let sorted = sort(sorter)
+        console.log(sorted)
         for (let i = 0; i < sorted.length; i++) {
-            this.currentAnimation.getElementsByTagName('keyframes')[0].appendChild(sorted[i])
+            this.currentAnimation.getElementsByTagName('keyFrames')[0].appendChild(sorted[i])
         }
     }
     deleteKeyframe = (frame) => {
-        let keyframes = this.currentAnimation.getElementsByTagName('keyframes')[0].getElementsByTagName('svg')
+        let keyframes = this.currentAnimation.getElementsByTagName('keyFrames')[0].getElementsByTagName('svg')
         for (let frame of keyframes) {
             if (parseInt(frame.getAttribute('frame')) === parseInt(frame)) {
                 keyframes.removeChild(frame)
@@ -244,15 +251,23 @@ class XMLSprite {
             }
             return [val1, val2, val3]
         }
-        let keyframes = this.currentAnimation.getElementsByTagName('keyframes')[0].getElementsByTagName('svg')
+        let keyframes = this.currentAnimation.getElementsByTagName('keyFrames')[0].getElementsByTagName('svg')
+        if (keyframes.length < 2) {
+            return keyframes[0]
+        }
+        if (keyframes[keyframes.length - 1].getAttribute('frame') < frame) {
+            return keyframes[keyframes.length -1]
+        }
         let bottomFrame;
         let topFrame;
-        let midFrame = bottomFrame.cloneNode(true)
+        let midFrame;
         let i = 0;
-        while (bottomFrame != undefined && topFrame != undefined) {
+        // console.log("FRAMES: ", (bottomFrame == undefined && topFrame == undefined))
+        while (bottomFrame == undefined || topFrame == undefined) {
             let node = keyframes[i]
             let val = parseInt(node.getAttribute('frame'))
-            if (val === frame) {
+            if (val == frame) {
+                console.log(val, frame)
                 return node
             } else if (val <= frame) {
                 bottomFrame = node
@@ -306,7 +321,7 @@ class XMLSprite {
         return midFrame
     }
     getFrame = (frame) => {
-        this.image = this.inbetweenFrame(frame)
+        this.image = this.inbetweenFrame(frame).cloneNode(true)
         this.setSVG()
     }
     parsePath(string) {
