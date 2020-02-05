@@ -54,6 +54,9 @@ function loadSprite() {
 
 function populateSlidersById(id) {
     let node = sprite.image.getElementById(id)
+    if (node == undefined) {
+        console.log(id)
+    }
     populateSliders(node)
 }
 
@@ -260,6 +263,7 @@ function loadFrame(ts) {
             i++
             if (first) {
                 populateSliders(node)
+                stateSelect()
                 first = false
             }
         }
@@ -373,6 +377,15 @@ function animLoad(id) {
 
 function loadState(state) {
     sprite.loadState(state)
+    let first = true
+    for (let node of sprite.image.childNodes) {
+        if (node.nodeName != '#text') {
+            if ( first ) {
+                populateSliders(node)
+                first = false
+            }
+        }
+    }
     draw([sprite])
 }
 

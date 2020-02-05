@@ -103,14 +103,15 @@ class XMLSprite {
     }
     loadState = (stateNumber) => {
         // this.image.parentNode.replaceChild(this.states.getElementsByTagName('svg')[stateNumber].cloneNode(true), this.image)
-        for (let child of this.image.childNodes) {
-            this.image.removeChild(child)
-        }
-        for (let child of this.states.getElementsByTagName('svg')[stateNumber].childNodes) {
-            if (child.nodeName != '#text') {
-                this.image.appendChild(this.clone(child))
-            }
-        }
+        // for (let child of this.image.childNodes) {
+        //     this.image.removeChild(child)
+        // }
+        // for (let child of this.states.getElementsByTagName('svg')[stateNumber].childNodes) {
+        //     if (child.nodeName != '#text') {
+        //         this.image.appendChild(this.clone(child))
+        //     }
+        // }
+        this.image = this.clone(this.states.getElementsByTagName('svg')[stateNumber])
         return this.getSVG()
     }
     reset = () => {
