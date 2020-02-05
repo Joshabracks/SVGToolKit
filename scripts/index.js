@@ -35,8 +35,8 @@ function loadSprite() {
             let htmGo = ''
             for (let node of paths.childNodes) {
                 if (node.nodeName != '#text') {
-                    node.setAttribute('id', "path" + i)
-                    htmGo += `<button onclick="populateSlidersById('` + node.id + `')">` + i + `</button>`
+                    sprite.setId(node)
+                    htmGo += `<button onclick="populateSlidersById('` + node.getAttribute('id') + `')">` + i + `</button>`
                     i++
                     if (first) {
                         populateSliders(node)
@@ -53,7 +53,7 @@ function loadSprite() {
 }
 
 function populateSlidersById(id) {
-    let node = sprite.xmlDoc.getElementById(id)
+    let node = sprite.image.getElementById(id)
     populateSliders(node)
 }
 
@@ -124,9 +124,9 @@ function populateSliders(node) {
         htmGo += `height<input type="range" min="-1000" max="1000" value="` + node.getAttribute('height') + `" class="slider" id="height"><br>`
         idList.push('height')
     }
-    if (!node.keyMap) {
-        node.keyMap = JSON.parse(node.getAttribute('keyMap'))
-    }
+    // if (!node.keyMap) {
+    //     node.keyMap = JSON.parse(node.getAttribute('keyMap'))
+    // }
     let v = false;
     if (node.getAttribute('d') != undefined) {
         v = sprite.parsePath(node.getAttribute('d'))
@@ -153,7 +153,7 @@ function populateSliders(node) {
                 slider.setAttribute('nodeId', node.id)
                 slider.oninput = function () {
                     // USE sprite.parsePath() and sprite.buildPath() to update paths
-                    let thisNode = sprite.xmlDoc.getElementById(this.getAttribute('nodeId'))
+                    let thisNode = sprite.image.getElementById(this.getAttribute('nodeId'))
                     let orig = sprite.parsePath(thisNode.getAttribute('oPath'))
                     let pathVal = parseFloat(orig[i].value) + (this.value / 2)
                     v[i].value = pathVal
@@ -162,12 +162,11 @@ function populateSliders(node) {
                     } else if (thisNode.getAttribute('points') != undefined) {
                         thisNode.setAttribute('points', sprite.buildPath(v))
                     }
-                    // console.log(thisNode.getAttribute('points'))
                     draw([sprite])
                 }
             }
         }
-        node.setAttribute('keyMap', JSON.stringify(node.keyMap))
+        // node.setAttribute('keyMap', JSON.stringify(node.keyMap))
     } else {
         document.getElementById('slidewrap').innerHTML = htmGo
     }
@@ -204,7 +203,6 @@ async function draw(sprites) {
     for (let sprite of sprites) {
         await sprite.getSVG()
             .then(data => {
-                // console.log(data)
                 drawQ.push(data)
             })
             .catch(console.log)
@@ -257,8 +255,8 @@ function loadFrame(ts) {
     let htmGo = ''
     for (let node of paths.childNodes) {
         if (node.nodeName != '#text') {
-            node.setAttribute('id', "path" + i)
-            htmGo += `<button onclick="populateSlidersById('` + node.id + `')">` + i + `</button>`
+            sprite.setId(node)
+            htmGo += `<button onclick="populateSlidersById('` + node.getAttribute('id') + `')">` + i + `</button>`
             i++
             if (first) {
                 populateSliders(node)
@@ -271,7 +269,8 @@ function loadFrame(ts) {
     showTools()
     stateSelect()
 
-    // let slider = document.getElementById('animSlider')
+    let slider = document.getElementById('animSlider')
+    slider.value = ts
     // let lowFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
     // let hiFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
     // for (key in animation.keyframes) {
@@ -328,10 +327,12 @@ function deleteKeyFrame() {
     let value = document.getElementById('animSlider').value
     if (value == 0) {
         alert('Cannot Delete Key at Time Stamp 0')
-    } else if (animation.keyframes[value].timestamp) {
-        delete animation.keyframes[value]
+    } else {
+        console.log(value)
+        sprite.deleteKeyframe(value)
     }
-    loadAnimation(animation)
+    loadAnimation(sprite.currentAnimation)
+    animationSelect()
 }
 
 function downloadSprite() {

@@ -30,7 +30,6 @@ class XMLSprite {
     constructor(string, x = 0, y = 0) {
         let doc = parser.parseFromString(string, 'text/xml')
         let tempImage;
-        console.log(doc)
         if (doc.documentElement.getAttribute("type") === 'sprite') {
             this.xmlDoc = doc
             this.root = this.xmlDoc.documentElement
@@ -54,6 +53,11 @@ class XMLSprite {
         this.image = this.xmlDoc.getElementsByTagName('currentImage')[0].getElementsByTagName('svg')[0]
         this.x = x
         this.y = y
+        this.root.setAttribute('idCount', 0)
+    }
+    setId = (node) => {
+        node.setAttribute('id', 'path' + this.root.getAttribute('idCount'))
+        this.root.setAttribute('idCount', parseInt(this.root.getAttribute('idCount')) + 1)
     }
     getSVG = () => {
         return new Promise((resolve, reject) => {
@@ -91,7 +95,7 @@ class XMLSprite {
     }
     saveState = () => {
         return new Promise((resolve, reject) => {
-            this.states.appendChild(this.image.cloneNode(true))
+            this.states.appendChild(this.clone(this.image))
             let states = this.states.getElementsByTagName('svg')
             states[states.length - 1].setAttribute('name', states.length - 1)
             return resolve(this.states.getElementsByTagName('svg')[this.states.getElementsByTagName('svg').length - 1])
@@ -99,20 +103,22 @@ class XMLSprite {
     }
     loadState = (stateNumber) => {
         // this.image.parentNode.replaceChild(this.states.getElementsByTagName('svg')[stateNumber].cloneNode(true), this.image)
-        for ( let child of this.image.childNodes ) {
+        for (let child of this.image.childNodes) {
             this.image.removeChild(child)
         }
         for (let child of this.states.getElementsByTagName('svg')[stateNumber].childNodes) {
-            this.image.appendChild(child.cloneNode(true))
+            if (child.nodeName != '#text') {
+                this.image.appendChild(this.clone(child))
+            }
         }
         return this.getSVG()
     }
     reset = () => {
-        for ( let child of this.image.childNodes ) {
+        for (let child of this.image.childNodes) {
             this.image.removeChild(child)
         }
         for (let child of this.original.getElementsByTagName('svg')[0].childNodes) {
-            this.image.appendChild(child.cloneNode(true))
+            this.image.appendChild(this.clone(child))
         }
         return this.getSVG()
     }
@@ -143,17 +149,22 @@ class XMLSprite {
         newAnimation.setAttribute('frame', 0)
         newAnimation.appendChild(this.xmlDoc.createElement('renderQ'))
         let keyFrames = this.xmlDoc.createElement('keyFrames')
-        let keyFrameZero = this.image.cloneNode(true)
+        let keyFrameZero = this.clone(this.image)
         keyFrameZero.setAttribute('frame', '0')
         keyFrames.appendChild(keyFrameZero)
         newAnimation.appendChild(keyFrames)
         this.currentAnimation = newAnimation
     }
     addKeyFrame = (frame) => {
-        let newKeyFrame = this.image.cloneNode(true)
+        let newKeyFrame = this.clone(this.image)
         newKeyFrame.setAttribute('frame', frame)
         this.currentAnimation.getElementsByTagName('keyFrames')[0].appendChild(newKeyFrame)
         this.orderKeyFrames()
+    }
+    clone = (node) => {
+        let newNode = node.cloneNode(true)
+        this.setId(newNode)
+        return newNode
     }
     orderKeyFrames = () => {
         function sort(arr) {
@@ -175,7 +186,8 @@ class XMLSprite {
                 }
             }
             pivot = [pivot]
-            return pivot.concat(sort(less)).concat(sort(more))
+            let result = pivot.concat(sort(less)).concat(sort(more))
+            return result
         }
         let keyframes = this.currentAnimation.getElementsByTagName('keyFrames')[0].getElementsByTagName('svg')
         let sorter = []
@@ -185,23 +197,21 @@ class XMLSprite {
         for (let frame of keyframes) {
             this.currentAnimation.getElementsByTagName('keyFrames')[0].removeChild(frame)
         }
-        console.log(keyframes)
-        console.log(sorter)
         let sorted = sort(sorter)
-        console.log(sorted)
         for (let i = 0; i < sorted.length; i++) {
             this.currentAnimation.getElementsByTagName('keyFrames')[0].appendChild(sorted[i])
         }
     }
     deleteKeyframe = (frame) => {
         let keyframes = this.currentAnimation.getElementsByTagName('keyFrames')[0].getElementsByTagName('svg')
-        for (let frame of keyframes) {
-            if (parseInt(frame.getAttribute('frame')) === parseInt(frame)) {
-                keyframes.removeChild(frame)
+        for (let _frame of keyframes) {
+            if (parseInt(_frame.getAttribute('frame')) == parseInt(frame)) {
+                this.currentAnimation.getElementsByTagName('keyFrames')[0].removeChild(_frame)
             }
         }
     }
     inbetweenFrame = (frame) => {
+        //SOMETIMES DOUBLES UP THIS.IMAGE PATHS FIND ISSUE AND FIX
         function colorValues(color) {
             let val1;
             let val2;
@@ -256,18 +266,16 @@ class XMLSprite {
             return keyframes[0]
         }
         if (keyframes[keyframes.length - 1].getAttribute('frame') < frame) {
-            return keyframes[keyframes.length -1]
+            return keyframes[keyframes.length - 1]
         }
         let bottomFrame;
         let topFrame;
         let midFrame;
         let i = 0;
-        // console.log("FRAMES: ", (bottomFrame == undefined && topFrame == undefined))
         while (bottomFrame == undefined || topFrame == undefined) {
             let node = keyframes[i]
             let val = parseInt(node.getAttribute('frame'))
             if (val == frame) {
-                console.log(val, frame)
                 return node
             } else if (val <= frame) {
                 bottomFrame = node
@@ -277,13 +285,14 @@ class XMLSprite {
             i++
         }
         let botVal = parseInt(bottomFrame.getAttribute('frame'))
-        let topVal = parseInt(topFrame.getattribute('frame'))
+        let topVal = parseInt(topFrame.getAttribute('frame'))
         let range = topVal - botVal
         let bottomRange = frame - botVal
         // let topRange = topVal - frame
         let percent = bottomRange / range
         let botAttributes = bottomFrame.attributes
         let topAttributes = topFrame.attributes
+        midFrame = this.clone(bottomFrame)
         // let colorVal;
         for (let path of midFrame.childNodes) {
             if (path.nodeName != 'text') {
@@ -321,7 +330,7 @@ class XMLSprite {
         return midFrame
     }
     getFrame = (frame) => {
-        this.image = this.inbetweenFrame(frame).cloneNode(true)
+        this.image = this.clone(this.inbetweenFrame(frame))
         this.setSVG()
     }
     parsePath(string) {
