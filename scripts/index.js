@@ -2,7 +2,7 @@
 
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
-let height = window.innerHeight
+let height = window.innerHeight * 0.90
 let width = window.innerWidth * 0.60
 ctx.canvas.height = height
 ctx.canvas.width = width
@@ -14,6 +14,9 @@ let lastFrame = Date.now()
 let playing = false;
 let render = false;
 let drawingQ = []
+
+let overlay = document.getElementById('overlay')
+overlay.style.display = 'none'
 
 document.getElementById("file").onchange = function () {
     document.getElementById("spriteForm").onsubmit()
@@ -64,6 +67,7 @@ function populateSlidersById(id) {
 }
 
 function populateSliders(node) {
+    console.log(node.nodeName)
     let htmGo = ''
     let idList = []
     if (node.getAttribute('fill') != undefined) {
@@ -177,6 +181,7 @@ function populateSliders(node) {
             }
         }
     }
+    populateOverlay(node)
 }
 
 function resetSVG() {
@@ -429,7 +434,7 @@ function moveKey() {
         return
     }
     let keyframes = sprite.currentAnimation.getElementsByTagName('keyFrames')[0].childNodes
-    for ( let node of keyframes) {
+    for (let node of keyframes) {
         if (node.nodeName != "#text") {
             if (node.getAttribute('frame') == value) {
                 node.setAttribute('frame', sliderVal)
@@ -441,10 +446,58 @@ function moveKey() {
     render = false
 }
 
+
+function toggleOverlay() {
+    if (overlay.style.display == 'none') {
+
+        overlay.style.display = 'block'
+    } else {
+        overlay.style.display = 'none'
+    }
+}
+
+let positionStart;
+let positionDrop;
+
+function populateOverlay(node) {
+    htmGo = ''
+    const specifics = {
+        rect: () => {
+            if (node.getAttribute('x') == undefined) {
+                node.setAttribute('x', 0)
+            }
+            if (node.getAttribute('y') == undefined) {
+                node.setAttribute('y', 0)
+            }
+            htmGo += `<div draggable="true" style="top: ` + node.getAttribute('y') + `px;left: ` + node.getAttribute('x') + `px;" ondrag="changePosition(event)" class="overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+        }
+    }
+    specifics[node.nodeName]()
+    document.getElementById('overlay').innerHTML = htmGo
+}
+document.addEventListener("dragover", function (event) {
+
+    // prevent default to allow drop
+    event.preventDefault();
+
+}, false);
+
+function changePosition(e) {
+    let div = e.target
+    let node = sprite.image.getElementById(div.getAttribute('_id'))
+    let x = e.clientX - document.getElementById('canvas').offsetLeft
+    let y = e.clientY - document.getElementById('canvas').offsetTop
+    node.setAttribute('x', x)
+    node.setAttribute('y', y)
+    div.style.top = y + 'px'
+    div.style.left = x + 'px'
+    draw([sprite])
+}
+
 window.onresize = () => {
     height = window.innerHeight
     width = window.innerWidth * 0.60
-    ctx.canvas.height = height
+    ctx.canvas.height = height * 0.90
     ctx.canvas.width = width
     draw(drawingQ)
 }

@@ -51,7 +51,6 @@ aside {
     width: 60%;
     height: 90%;
     display: none;
-    background-color: blue;
 }
 
 footer {
@@ -157,6 +156,18 @@ button:active {
     width: 8px;
     height: 15px;
     z-index: 2;
+}
+
+.overlayNode {
+    position: absolute;
+    /* transform: rotate(45deg); */
+    background-color: black;
+    outline-color: white;
+    outline-width: 1px;
+    outline-style: solid;
+    border-radius: 5px;
+    width: 5px;
+    height: 5px;
 }
 
 #animSlider {
