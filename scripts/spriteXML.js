@@ -266,7 +266,7 @@ class XMLSprite {
         if (keyframes.length < 2) {
             return keyframes[0]
         }
-        if (keyframes[keyframes.length - 1].getAttribute('frame') < frame) {
+        if (parseInt(keyframes[keyframes.length - 1].getAttribute('frame')) < parseInt(frame)) {
             return keyframes[keyframes.length - 1]
         }
         let bottomFrame;
