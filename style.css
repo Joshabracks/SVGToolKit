@@ -33,6 +33,7 @@ aside {
     color: white;
     font-family: sans-serif;
     font-weight: bold;
+    overflow-y: auto;
 }
 
 #canvas {
