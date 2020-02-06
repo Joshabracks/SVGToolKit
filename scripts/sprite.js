@@ -6,41 +6,38 @@ class Sprite {
         this.animations = {}
         this.parseSVG(string)
         this.image = this.updateImage(string)
-        this.animations = {}
         this.animFrame = 0
         this.animKey = 0
         this.animate = false
-        this.originalPaths = JSON.parse(JSON.stringify(this.paths))
+        this.originalPaths = s.serializeToString(this.xmlDoc)
         this.states = {}
         this.name = "sprite"
     }
+
     parseSVG = (string) => {
+        this.xmlDoc = parser.parseFromString(string, "text/xml")
+        let svg = this.xmlDoc.getElementsByTagName('svg')[0]
         let paths = {}
-        this.xmlDoc = parser.parseFromString(string, "text/xml");
-        let xmlPaths = this.xmlDoc.getElementsByTagName('path')
-        for (let i = 0; i < xmlPaths.length; i++) {
-            let current = xmlPaths[i].getAttribute('d')
-            let key = []
-            let val = ''
-            for (let ch of current) {
-                if (ch == 'M' || ch == 'm' || ch == 'L' || ch == 'l' || ch == 'H' || ch == 'h' || ch == 'V' || ch == 'v' || ch == 'Z' || ch == 'z' || ch == ',' || ch == ' ' || ch == 'C' || ch == 'c' || ch == 'S' || ch == 's') {
-                    if (val.length > 0) {
-                        key.push({ number: true, value: val })
-                        val = ''
-                    }
-                    key.push({ number: false, value: ch })
-                } else if (ch == '-') {
-                    if (val.length > 0) {
-                        key.push({ number: true, value: val })
-                        val = ch
-                    }
-                } else {
-                    val += ch
+        for (let object of svg.childNodes) {
+            if (object.tagName == 'path') {
+                object.setAttribute ('keyMap', JSON.stringify(this.parsePath(object.getAttribute('d'))))
+                if (object.getAttribute('originalPath') == undefined) {
+                    object.setAttribute("originalPath", object.getAttribute('keyMap'))
                 }
             }
-            paths[i] = key
+            if (object.tagName == 'polygon' || object.tagName == 'polyline') {
+                object.setAttribute ('keyMap', JSON.stringify(this.parsePath(object.getAttribute('points'))))
+                if (object.getAttribute('originalPath') == undefined) {
+                    object.setAttribute("originalPath", object.getAttribute('keyMap'))
+                }
+            }
+            if (object.keyMap) {
+                let _keyMap = JSON.parse(object.getAttribute('keyMap'))
+                _keyMap.originalPath = JSON.parse(JSON.stringify(object.keyMap))
+                object.setAttribute('keyMap', JSON.stringify(_keyMap))
+            }
+
         }
-        this.paths = paths;
         this.svg = this.xmlDoc.getElementsByTagName('svg')[0]
         let wstring = this.svg.getAttribute('width')
         let hstring = this.svg.getAttribute('height')
@@ -50,11 +47,76 @@ class Sprite {
         let ystring = this.svg.getAttribute('y')
         this.x = xstring.slice(0, xstring.length - 2)
         this.y = ystring.slice(0, ystring.length - 2)
+
+    }
+    parsePath(string) {
+        let key = []
+        let val = ''
+        for (let ch of string) {
+            if (ch == 'M' || ch == 'm' || ch == 'L' || ch == 'l' || ch == 'H' || ch == 'h' || ch == 'V' || ch == 'v' || ch == 'Z' || ch == 'z' || ch == ',' || ch == ' ' || ch == 'C' || ch == 'c' || ch == 'S' || ch == 's') {
+                if (val.length > 0) {
+                    key.push({ number: true, value: val })
+                    val = ''
+                }
+                key.push({ number: false, value: ch })
+            } else if (ch == '-') {
+                if (val.length > 0) {
+                    key.push({ number: true, value: val })
+                    val = ch
+                }
+            } else {
+                val += ch
+            }
+        }
+        return key
+    }
+    // parseSVG = (string) => {
+    //     let paths = {}
+    //     this.xmlDoc = parser.parseFromString(string, "text/xml");
+
+    //     let xmlPaths = this.xmlDoc.getElementsByTagName('path')
+    //     for (let i = 0; i < xmlPaths.length; i++) {
+    //         let current = xmlPaths[i].getAttribute('d')
+    //         let key = []
+    //         let val = ''
+    //         for (let ch of current) {
+    //             if (ch == 'M' || ch == 'm' || ch == 'L' || ch == 'l' || ch == 'H' || ch == 'h' || ch == 'V' || ch == 'v' || ch == 'Z' || ch == 'z' || ch == ',' || ch == ' ' || ch == 'C' || ch == 'c' || ch == 'S' || ch == 's') {
+    //                 if (val.length > 0) {
+    //                     key.push({ number: true, value: val })
+    //                     val = ''
+    //                 }
+    //                 key.push({ number: false, value: ch })
+    //             } else if (ch == '-') {
+    //                 if (val.length > 0) {
+    //                     key.push({ number: true, value: val })
+    //                     val = ch
+    //                 }
+    //             } else {
+    //                 val += ch
+    //             }
+    //         }
+    //         paths[i] = key
+    //     }
+    //     this.paths = paths;
+    //     this.svg = this.xmlDoc.getElementsByTagName('svg')[0]
+    //     let wstring = this.svg.getAttribute('width')
+    //     let hstring = this.svg.getAttribute('height')
+    //     this.width = wstring.slice(0, wstring.length - 2)
+    //     this.height = hstring.slice(0, hstring.length - 2)
+    //     let xstring = this.svg.getAttribute('x')
+    //     let ystring = this.svg.getAttribute('y')
+    //     this.x = xstring.slice(0, xstring.length - 2)
+    //     this.y = ystring.slice(0, ystring.length - 2)
+    // }
+    resetSVG = () => {
+        this.xmlDoc = parser.parseFromString(this.originalPaths, 'text/xml')
     }
     getSVG = () => {
         return new Promise((resolve, reject) => {
-            for (let i = 0; i < this.paths.length; i++) {
-                this.updatePath(i)
+            for (let node of this.xmlDoc.getElementsByTagName('svg')[0].childNodes) {
+                if (node.keyMap != undefined) {
+                    this.updatePath(node)
+                }
             }
             const blob = new Blob([s.serializeToString(this.xmlDoc)], { type: 'image/svg+xml' })
             const url = window.URL.createObjectURL(blob)
@@ -65,12 +127,17 @@ class Sprite {
             }
         })
     }
-    updatePath = (path) => {
+    updatePath = (node) => {
         let string = ''
-        for (let i = 0; i < this.paths[path].length; i++) {
-            string += this.paths[path][i].value
+        for (let i = 0; i < node.keyMap.length; i++) {
+            string += node.keyMap[i].value
         }
-        this.xmlDoc.getElementsByTagName('path')[path].setAttribute('d', string)
+        if (node.getAttribute('d') != undefined) {
+            node.setAttribute('d', string)
+        }
+        if (node.getAttribute('points') != undefined) {
+            node.setAttribute('points', string)
+        }
     }
     updateImage = () => {
         const blob = new Blob([s.serializeToString(this.xmlDoc)], { type: 'image/svg+xml' })
@@ -92,7 +159,7 @@ class Sprite {
                     name: name,
                     length: length,
                     keyframes: {
-                        0: { timestamp: 0, paths: JSON.parse(JSON.stringify(this.paths)) }
+                        0: { timestamp: 0, paths: s.serializeToString(this.xmlDoc) }
                     },
                 }
                 return resolve(this.animations[name])
@@ -102,7 +169,7 @@ class Sprite {
         })
     }
     addKeyFrame = (animation, timestamp) => {
-        this.animations[animation].keyframes[parseInt(timestamp)] = { timestamp: parseInt(timestamp), paths: JSON.parse(JSON.stringify(this.paths)) }
+        this.animations[animation].keyframes[parseInt(timestamp)] = { timestamp: parseInt(timestamp), paths: s.serializeToString(this.xmlDoc) }
         // let kf = this.orderKeyFrames(this.animations[animation].keyframes)
         return this.animations[animation]
     }
@@ -157,16 +224,16 @@ class Sprite {
         }
     }
     saveState() {
-        let newState = JSON.parse(JSON.stringify(this.paths))
+        let newState = s.serializeToString(this.xmlDoc)
         this.states[Object.keys(this.states).length] = newState
     }
     loadState(state) {
         if (this.states[state]) {
-            this.paths = JSON.parse(JSON.stringify(this.states[state]))
-            for (let path in this.paths) {
-                this.updatePath(path)
-            }
-            this.updateImage()
+            this.xmlDoc = parser.parseFromString(this.states[state], "text/xml")
+            // for (let path in this.paths) {
+            //     this.updatePath(path)
+            // }
+            // this.updateImage()
         } else {
             alert("State of " + state + " does not exist.")
         }
