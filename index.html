@@ -14,23 +14,25 @@
         <form onsubmit="loadSprite();return false" id="spriteForm">
             <!-- <label for="svg">Choose SVG or Sprite</label> -->
             <input type="file" accept=".svg, .spt" name="file" id="file" style="display: none;" />
-            <button onclick="openFile()">Load SVG or Sprite</button>
+            <button onclick="openFile()" class="bFull">Load SVG or Sprite</button>
         </form>
-        <button class="tool button" onclick="resetSVG()">reset Sprite</button>
-        <button class="tool button" onclick="newAnimation()">new Animation</button>
-        <button class="tool button" onclick="downloadSprite()">save Sprite</button>
-        <button class="tool button" onclick="saveState()">save State</button>
+        <button class="tool button bFull" onclick="resetSVG()">reset Sprite</button>
+        <button class="tool button bFull" onclick="newAnimation()">new Animation</button>
+        <button class="tool button bFull" onclick="saveState()">save State</button>
         <!-- <div class="tool" style="display: none;"> -->
             <form class ="tool" onsubmit="renameSprite();return false">
-                <input type="text" name="spriteName" id="spriteName">
-                <button type="submit">Rename Sprite</button>
+                <input type="text" class="bFull" style="margin-top: 10px; background-color: black; color: white; font-weight: bold;" name="spriteName" id="spriteName">
+                <button type="submit" class="bFull">Rename Sprite</button>
             </form>
             <table style="width: 100%;">
                 <tr>
-                    <td id="pathTitle">Sprite Paths:</td>
+                    <td id="pathTitle" class="tool" style="text-align: center;">Sprite Paths</td>
+                </tr>
+                <tr>
                     <td id="pathList"></td>
                 </tr>
             </table>
+            <button class="tool button bFull" style="margin-top: 10px;" onclick="downloadSprite()">save Sprite</button>
         </div>
     </header>
     <aside>

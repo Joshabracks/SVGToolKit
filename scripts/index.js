@@ -3,7 +3,7 @@
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
 let height = window.innerHeight
-let width = window.innerWidth * 0.80
+let width = window.innerWidth * 0.60
 ctx.canvas.height = height
 ctx.canvas.width = width
 
@@ -226,7 +226,7 @@ function loadAnimation(anim) {
     let htmGo = ''
     htmGo += "<div id='keyFrames'>"
     for (let frame of anim.getElementsByTagName('keyFrames')[0].getElementsByTagName('svg')) {
-        htmGo += "<button onclick='selectKeyFrame(event)'class='keyFrame' id='key" + frame.getAttribute('frame') + "' style='left:" + (frame.getAttribute('frame') / anim.getAttribute('length')) * 99 + "%;'></button>"
+        htmGo += "<button onclick='selectKeyFrame(event)'class='keyFrame' id='key" + frame.getAttribute('frame') + "' style='left:" + (frame.getAttribute('frame') / anim.getAttribute('length')) * 98.3 + "%;'></button>"
     }
     htmGo += "</div>"
     htmGo += `<input type="range" min="0" max="` + anim.getAttribute('length') + `" value="0" class="slider" id="animSlider"></input>`
@@ -563,7 +563,7 @@ function moveKey() {
 
 window.onresize = () => {
     height = window.innerHeight
-    width = window.innerWidth * 0.80
+    width = window.innerWidth * 0.60
     ctx.canvas.height = height
     ctx.canvas.width = width
     draw(drawingQ)

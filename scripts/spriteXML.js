@@ -290,38 +290,43 @@ class XMLSprite {
         let range = topVal - botVal
         let bottomRange = frame - botVal
         // let topRange = topVal - frame
-        let percent = bottomRange / range
-        let botAttributes = bottomFrame.attributes
-        let topAttributes = topFrame.attributes
+        let percent = (bottomRange / range).toFixed(2)
         midFrame = this.clone(bottomFrame)
         // let colorVal;
-        for (let path of midFrame.childNodes) {
-            if (path.nodeName != 'text') {
-                for (let i = 0; i < path.attributes; i++) {
-                    if (topAttributes[i].value != botAttributes[i].value) {
-                        let attr = path.attributes[i]
-                        if (attr.name === 'fill' || attr.name === 'stroke') {
-                            let topColorVal = colorValues(topAttributes[i].value)
-                            let botColorVal = colorValues(botAttributes[i].value)
-                            let colorVal = colorValues(attr.value)
-                            let color = 'rgb('
-                            for (let i = 0; i < colorVal.length; i++) {
-                                color += botColorVal[i] + ((topColorVal[i] - botColorVal[i]) * percent)
-                                color += ','
-                            }
-                            color += ')'
-                            path.setAttribute(attr.name, color)
-                        } else if (attr.name === 'x' || attr.name === 'y' || attr.name === 'x1' || attr.name === 'y1' || attr.name === 'x2' || attr.name === 'y2' || attr.name === 'stroke-miterlimit' || attr.name === 'cx' || attr.name === 'cy' || attr.name === 'r' || attr.name === 'rx' || attr.name === 'ry' || attr.name === 'width' || attr.name === 'height') {
-                            attr.value = botAttributes[i].value + ((topAttributes[i].value - botAttributes[i].value) * percent)
-                        } else if (attr.name === 'd' || attr.name === 'points') {
-                            let keys = this.parsePath(attr.value)
-                            let topKeys = this.parsePath(topAttributes[i].value)
-                            let botKeys = this.parsePath(botAttributes[i].value)
-                            for (let i = 0; i < keys.length; i++) {
-                                if (keys[i].number) {
-                                    keys[i].value = botKeys[i].value + ((topKeys[i].value - botKeys[i].value) * percent)
+        for (let p = 0; p < midFrame.childNodes.length; p++) {
+            let path = midFrame.childNodes[p]
+            let topAttributes = topFrame.childNodes[p].attributes
+            let botAttributes = bottomFrame.childNodes[p].attributes
+            if (path.nodeName != '#text') {
+                for (let i = 0; i < path.attributes.length; i++) {
+                    if (path.attributes[i].name != "id" && (topAttributes[i] && botAttributes[i])) {
+                        if (topAttributes[i].value != botAttributes[i].value) {
+                            let attr = path.attributes[i]
+                            if (attr.name == 'fill' || attr.name == 'stroke') {
+                                let topColorVal = colorValues(topAttributes[i].value)
+                                let botColorVal = colorValues(botAttributes[i].value)
+                                let colorVal = colorValues(attr.value)
+                                let color = 'rgb('
+                                for (let i = 0; i < colorVal.length; i++) {
+                                    color += Math.floor(parseFloat(botColorVal[i]) + ((parseFloat(topColorVal[i]) - parseFloat(botColorVal[i])) * percent))
+                                    color += ','
                                 }
-                                attr.value = this.buildPath(keys)
+                                color = color.slice(0, color.length - 1)
+                                color += ')'
+                                path.setAttribute(attr.name, color)
+                            } else if (attr.name == 'x' || attr.name == 'y' || attr.name == 'x1' || attr.name == 'y1' || attr.name == 'x2' || attr.name == 'y2' || attr.name == 'stroke-miterlimit' || attr.name == 'cx' || attr.name == 'cy' || attr.name == 'r' || attr.name == 'rx' || attr.name == 'ry' || attr.name == 'width' || attr.name == 'height') {
+                                let middleVal = (parseFloat(botAttributes[i].value) + ((parseFloat(topAttributes[i].value) - parseFloat(botAttributes[i].value)) * percent))
+                                path.setAttribute(attr.name, middleVal)
+                            } else if (attr.name == 'd' || attr.name == 'points') {
+                                let keys = this.parsePath(attr.value)
+                                let topKeys = this.parsePath(topAttributes[i].value)
+                                let botKeys = this.parsePath(botAttributes[i].value)
+                                for (let i = 0; i < keys.length; i++) {
+                                    if (keys[i].number) {
+                                        keys[i].value = parseFloat(botKeys[i].value) + ((parseFloat(topKeys[i].value) - parseFloat(botKeys[i].value)) * percent)
+                                    }
+                                    path.setAttribute(attr.name, this.buildPath(keys))
+                                }
                             }
                         }
                     }
