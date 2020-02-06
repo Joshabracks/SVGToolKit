@@ -161,13 +161,16 @@ button:active {
 .overlayNode {
     position: absolute;
     /* transform: rotate(45deg); */
+    
+}
+
+.positionNode {
+    width: 5px;
+    height: 5px;
     background-color: black;
     outline-color: white;
     outline-width: 1px;
     outline-style: solid;
-    border-radius: 5px;
-    width: 5px;
-    height: 5px;
 }
 
 #animSlider {

@@ -33,21 +33,7 @@ function loadSprite() {
             let newSprite = new XMLSprite(svg)
             sprite = newSprite
             let paths = sprite.image
-            let i = 0;
-            let first = true
-            let htmGo = ''
-            for (let node of paths.childNodes) {
-                if (node.nodeName != '#text') {
-                    sprite.setId(node)
-                    htmGo += `<button onclick="populateSlidersById('` + node.getAttribute('id') + `')">` + i + `</button>`
-                    i++
-                    if (first) {
-                        populateSliders(node)
-                        first = false
-                    }
-                }
-            }
-            document.getElementById('pathList').innerHTML = htmGo
+            pathsLoader(paths)
             draw([sprite])
             showTools()
             stateSelect()
@@ -56,6 +42,25 @@ function loadSprite() {
             }
         })
         .catch(console.log)
+}
+
+function pathsLoader(paths) {
+    let i = 0;
+    let first = true
+    let htmGo = ''
+    for (let node of paths.childNodes) {
+        console.log(node)
+        if (node.nodeName != '#text') {
+            sprite.setId(node)
+            htmGo += `<button onclick="populateSlidersById('` + node.getAttribute('id') + `')">` + i + `</button>`
+            i++
+            if (first) {
+                populateSliders(node)
+                first = false
+            }
+        }
+    }
+    document.getElementById('pathList').innerHTML = htmGo
 }
 
 function populateSlidersById(id) {
@@ -244,21 +249,9 @@ function loadFrame(ts) {
     let i = 0;
     let first = true
     let htmGo = ''
-    for (let node of paths.childNodes) {
-        if (node.nodeName != '#text') {
-            sprite.setId(node)
-            htmGo += `<button onclick="populateSlidersById('` + node.getAttribute('id') + `')">` + i + `</button>`
-            i++
-            if (first) {
-                populateSliders(node)
-                stateSelect()
-                first = false
-            }
-        }
-    }
-    document.getElementById('pathList').innerHTML = htmGo
+    pathsLoader(paths)
     draw([sprite])
-    showTools()
+    // showTools()
     stateSelect()
 
     let slider = document.getElementById('animSlider')
@@ -311,6 +304,7 @@ function stateSelect() {
         htmGo += `<button onclick="loadState(` + i + `)">` + states[i].getAttribute('name') + `</button>`
     }
     document.getElementById('states').innerHTML = htmGo
+    // populateOverlay()
 }
 
 function animationSelect() {
@@ -329,6 +323,7 @@ function animLoad(id) {
 
 function loadState(state) {
     sprite.loadState(state)
+    pathsLoader(sprite.image)
     let first = true
     for (let node of sprite.image.childNodes) {
         if (node.nodeName != '#text') {
@@ -403,8 +398,8 @@ async function renderAnimation() {
     }, 100)
     await sprite.renderQueue()
         .then(data => {
-            stateSelect()
-            animationSelect()
+            // stateSelect()
+            // animationSelect()
             loadAnimation(sprite.currentAnimation)
             render = true;
             clearInterval(renderUpdate)
@@ -469,7 +464,9 @@ function populateOverlay(node) {
             if (node.getAttribute('y') == undefined) {
                 node.setAttribute('y', 0)
             }
-            htmGo += `<div draggable="true" style="top: ` + node.getAttribute('y') + `px;left: ` + node.getAttribute('x') + `px;" ondrag="changePositionRect(event)" class="overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+            htmGo += `<div draggable="true" style="top: ` + node.getAttribute('y') + `px;left: ` + node.getAttribute('x') + `px;" ondrag="changePositionRect(event)" class="positionNode overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+            htmGo += `<div draggable="true" style="top: ` + (parseInt(node.getAttribute('y')) + parseFloat(node.getAttribute('height'))) + `px;left:` + parseInt(node.getAttribute('x')) + `px;" ondrag="changeHeightRect(event)" class="positionNode overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+            htmGo += `<div draggable="true" style="left: ` + (parseInt(node.getAttribute('x')) + parseFloat(node.getAttribute('width'))) + `px;top:` + parseInt(node.getAttribute('y')) + `px;" ondrag="changeWidthRect(event)" class="positionNode overlayNode" _id="` + node.getAttribute('id') + `"></div>`
         },
         circle: () => {
             if (node.getAttribute('cx') == undefined) {
@@ -478,7 +475,8 @@ function populateOverlay(node) {
             if (node.getAttribute('cy') == undefined) {
                 node.setAttribute('cy', 0)
             }
-            htmGo += `<div draggable="true" style="top: ` + node.getAttribute('cy') + `px;left: ` + node.getAttribute('cx') + `px;" ondrag="changePositionCircle(event)" class="overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+            htmGo += `<div draggable="true" style="top: ` + node.getAttribute('cy') + `px;left: ` + node.getAttribute('cx') + `px;" ondrag="changePositionCircle(event)" class="positionNode overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+            htmGo += `<div draggable="true" style="left: ` + (parseFloat(parseFloat(node.getAttribute('cx')) + parseFloat(node.getAttribute('r')))) + `px;top:` + parseInt(node.getAttribute('cy')) + `px;" ondrag="changeRadiusCircle(event)" class="positionNode overlayNode" _id="` + node.getAttribute('id') + `"></div>`
         },
         ellipse: () => {
             if (node.getAttribute('cx') == undefined) {
@@ -487,11 +485,13 @@ function populateOverlay(node) {
             if (node.getAttribute('cy') == undefined) {
                 node.setAttribute('cy', 0)
             }
-            htmGo += `<div draggable="true" style="top: ` + node.getAttribute('cy') + `px;left: ` + node.getAttribute('cx') + `px;" ondrag="changePositionCircle(event)" class="overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+            htmGo += `<div draggable="true" style="top: ` + node.getAttribute('cy') + `px;left: ` + node.getAttribute('cx') + `px;" ondrag="changePositionCircle(event)" class="positionNode overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+            htmGo += `<div draggable="true" style="left: ` + (parseFloat(parseFloat(node.getAttribute('cx')) + parseFloat(node.getAttribute('rx')))) + `px;top:` + parseInt(node.getAttribute('cy')) + `px;" ondrag="changeWidthEllipse(event)" class="positionNode overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+            htmGo += `<div draggable="true" style="left: ` + (parseFloat(parseFloat(node.getAttribute('cx')))) + `px;top:` + (parseFloat(parseFloat(node.getAttribute('cy'))) + parseFloat(node.getAttribute('ry'))) + `px;" ondrag="changeHeightEllipse(event)" class="positionNode overlayNode" _id="` + node.getAttribute('id') + `"></div>`
         },
         line: () => {
-            htmGo += `<div draggable="true" style="top: ` + node.getAttribute('y1') + `px;left: ` + node.getAttribute('x1') + `px;" ondrag="changePositionLine1(event)" class="overlayNode" _id="` + node.getAttribute('id') + `"></div>`
-            htmGo += `<div draggable="true" style="top: ` + node.getAttribute('y2') + `px;left: ` + node.getAttribute('x2') + `px;" ondrag="changePositionLine2(event)" class="overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+            htmGo += `<div draggable="true" style="top: ` + node.getAttribute('y1') + `px;left: ` + node.getAttribute('x1') + `px;" ondrag="changePositionLine1(event)" class="positionNode overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+            htmGo += `<div draggable="true" style="top: ` + node.getAttribute('y2') + `px;left: ` + node.getAttribute('x2') + `px;" ondrag="changePositionLine2(event)" class="positionNode overlayNode" _id="` + node.getAttribute('id') + `"></div>`
         }
     }
     specifics[node.nodeName]()
@@ -511,6 +511,15 @@ function changePositionRect(e) {
     let y = e.clientY - document.getElementById('canvas').offsetTop
     node.setAttribute('x', x)
     node.setAttribute('y', y)
+    
+    for ( let box of document.getElementsByClassName('positionNode') ) {
+        if ( box != div ) {
+            let yDif = (box.style.top.slice(0, box.style.top.length - 2) - parseFloat(div.style.top.slice(0, div.style.top.length - 2)))
+            box.style.top = ( y + yDif) + 'px'
+            let xDif = (box.style.left.slice(0, box.style.left.length - 2) - parseFloat(div.style.left.slice(0, div.style.left.length - 2)))
+            box.style.left = ( x + xDif) + 'px'
+        }
+    }
     div.style.top = y + 'px'
     div.style.left = x + 'px'
     draw([sprite])
@@ -523,6 +532,14 @@ function changePositionCircle(e) {
     let y = e.clientY - document.getElementById('canvas').offsetTop
     node.setAttribute('cx', x)
     node.setAttribute('cy', y)
+    for ( let box of document.getElementsByClassName('positionNode') ) {
+        if ( box != div ) {
+            let yDif = (box.style.top.slice(0, box.style.top.length - 2) - parseFloat(div.style.top.slice(0, div.style.top.length - 2)))
+            box.style.top = ( y + yDif) + 'px'
+            let xDif = (box.style.left.slice(0, box.style.left.length - 2) - parseFloat(div.style.left.slice(0, div.style.left.length - 2)))
+            box.style.left = ( x + xDif) + 'px'
+        }
+    }
     div.style.top = y + 'px'
     div.style.left = x + 'px'
     draw([sprite])
@@ -549,6 +566,53 @@ function changePositionLine2(e) {
     node.setAttribute('y2', y)
     div.style.top = y + 'px'
     div.style.left = x + 'px'
+    draw([sprite])
+}
+
+function changeHeightRect(e) {
+    let div = e.target
+    let node = sprite.image.getElementById(div.getAttribute('_id'))
+    // let x = e.clientX - document.getElementById('canvas').offsetLeft
+    let y = e.clientY - document.getElementById('canvas').offsetTop
+    node.setAttribute('height', y - (parseFloat(node.getAttribute('y'))))
+    div.style.top = y + 'px'
+    draw([sprite])
+}
+
+function changeWidthRect(e) {
+    let div = e.target
+    let node = sprite.image.getElementById(div.getAttribute('_id'))
+    // let x = e.clientX - document.getElementById('canvas').offsetLeft
+    let x = e.clientX - document.getElementById('canvas').offsetLeft
+    node.setAttribute('width', x - (parseFloat(node.getAttribute('x'))))
+    div.style.left = x + 'px'
+    draw([sprite])
+}
+
+function changeRadiusCircle(e) {
+    let div = e.target
+    let node = sprite.image.getElementById(div.getAttribute('_id'))
+    let x = e.clientX - document.getElementById('canvas').offsetLeft
+    node.setAttribute('r', x - (parseFloat(node.getAttribute('cx'))))
+    div.style.left = x + 'px'
+    draw([sprite])
+}
+
+function changeWidthEllipse(e) {
+    let div = e.target
+    let node = sprite.image.getElementById(div.getAttribute('_id'))
+    let x = e.clientX - document.getElementById('canvas').offsetLeft
+    node.setAttribute('rx', x - (parseFloat(node.getAttribute('cx'))))
+    div.style.left = x + 'px'
+    draw([sprite])
+}
+
+function changeHeightEllipse(e) {
+    let div = e.target
+    let node = sprite.image.getElementById(div.getAttribute('_id'))
+    let y = e.clientY - document.getElementById('canvas').offsetTop
+    node.setAttribute('ry', y - (parseFloat(node.getAttribute('cy'))))
+    div.style.top = y + 'px'
     draw([sprite])
 }
 
