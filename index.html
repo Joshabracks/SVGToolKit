@@ -32,13 +32,15 @@
                     <td id="pathList"></td>
                 </tr>
             </table>
-            <button class="tool button bFull" style="margin-top: 10px;" onclick="downloadSprite()">save Sprite</button>
+            <button class="tool button bFull" onclick="toggleOverlay()">Toggle Overlay</button>
+            <button class="tool button bFull" style="margin-top: 50px;" onclick="downloadSprite()">save Sprite</button>
         </div>
     </header>
     <aside>
         <div id="slidewrap"></div>
     </aside>
     <canvas id="canvas"></canvas>
+    <div id="overlay"></div>
     <footer id="footer">
     </footer>
     <div id="loader">
@@ -63,10 +65,9 @@
             </table>
         </div>
     </div>
-    <!-- <script src="./scripts/sprite.js"></script> -->
     <script src="./scripts/spriteXML.js"></script>
     <script src="./scripts/index.js"></script>
-    <!-- <script src="./scripts/master.js"></script> -->
+    <script src="./scripts/overlay.js"></script>
 </body>
 
 </html>

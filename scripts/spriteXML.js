@@ -1,11 +1,5 @@
 const parser = new DOMParser();
 const s = new XMLSerializer()
-// const canvas = document.getElementById('canvas')
-// const ctx = canvas.getContext('2d')
-// let height = window.innerHeight
-// let width = window.innerWidth * 0.80
-// ctx.canvas.height = height
-// ctx.canvas.width = width
 
 const xmlTemplate = `<root name="Sprite" type="sprite">
 <original></original>
@@ -36,9 +30,8 @@ class XMLSprite {
             this.states = this.xmlDoc.getElementsByTagName('states')[0]
             this.animations = this.xmlDoc.getElementsByTagName('animations')[0]
             this.original = this.xmlDoc.getElementsByTagName('original')[0]
-            this.name = this.xmlDoc.documentElement.getAttribute('name')
         } else {
-            doc.documentElement.setAttribute('type', 'sprite')
+            doc.documentElement.setAttribute('type', 'Sprite')
             this.xmlDoc = parser.parseFromString(xmlTemplate, 'text/xml')
             tempImage = doc.getElementsByTagName('svg')[0]
             tempImage.setAttribute('name', '0')
@@ -50,10 +43,14 @@ class XMLSprite {
             this.original.appendChild(tempImage.cloneNode(true))
             this.xmlDoc.getElementsByTagName('currentImage')[0].appendChild(tempImage.cloneNode(true))
         }
+        this.name = this.xmlDoc.documentElement.getAttribute('name')
         this.image = this.xmlDoc.getElementsByTagName('currentImage')[0].getElementsByTagName('svg')[0]
         this.x = x
         this.y = y
         this.root.setAttribute('idCount', 0)
+        if ( this.animations.getElementsByTagName('animation').length > 0) {
+            this.currentAnimation = this.animations.getElementsByTagName('animation')[0]
+        }
     }
     setId = (node) => {
         node.setAttribute('id', 'path' + this.root.getAttribute('idCount'))
@@ -61,7 +58,6 @@ class XMLSprite {
     }
     getSVG = () => {
         return new Promise((resolve, reject) => {
-            // let currentState = this.states.getElementsByTagName('svg')[this.states.getAttribute('current')]
             const blob = new Blob([s.serializeToString(this.image)], { type: 'image/svg+xml' })
             const url = window.URL.createObjectURL(blob)
             const image = new Image(parseFloat(this.image.getAttribute('width')), parseFloat(this.image.getAttribute('height')))
@@ -102,15 +98,6 @@ class XMLSprite {
         })
     }
     loadState = (stateNumber) => {
-        // this.image.parentNode.replaceChild(this.states.getElementsByTagName('svg')[stateNumber].cloneNode(true), this.image)
-        // for (let child of this.image.childNodes) {
-        //     this.image.removeChild(child)
-        // }
-        // for (let child of this.states.getElementsByTagName('svg')[stateNumber].childNodes) {
-        //     if (child.nodeName != '#text') {
-        //         this.image.appendChild(this.clone(child))
-        //     }
-        // }
         this.image = this.clone(this.states.getElementsByTagName('svg')[stateNumber])
         return this.getSVG()
     }
@@ -213,7 +200,6 @@ class XMLSprite {
         }
     }
     inbetweenFrame = (frame) => {
-        //SOMETIMES DOUBLES UP THIS.IMAGE PATHS FIND ISSUE AND FIX
         function colorValues(color) {
             let val1;
             let val2;
@@ -290,10 +276,8 @@ class XMLSprite {
         let topVal = parseInt(topFrame.getAttribute('frame'))
         let range = topVal - botVal
         let bottomRange = frame - botVal
-        // let topRange = topVal - frame
         let percent = (bottomRange / range).toFixed(2)
         midFrame = this.clone(bottomFrame)
-        // let colorVal;
         for (let p = 0; p < midFrame.childNodes.length; p++) {
             let path = midFrame.childNodes[p]
             let topAttributes = topFrame.childNodes[p].attributes
@@ -316,7 +300,7 @@ class XMLSprite {
                                 color += ')'
                                 path.setAttribute(attr.name, color)
                             } else if (attr.name == 'x' || attr.name == 'y' || attr.name == 'x1' || attr.name == 'y1' || attr.name == 'x2' || attr.name == 'y2' || attr.name == 'stroke-miterlimit' || attr.name == 'cx' || attr.name == 'cy' || attr.name == 'r' || attr.name == 'rx' || attr.name == 'ry' || attr.name == 'width' || attr.name == 'height') {
-                                let middleVal = (parseFloat(botAttributes[i].value) + ((parseFloat(topAttributes[i].value) - parseFloat(botAttributes[i].value)) * percent))
+                                let middleVal = (parseFloat(botAttributes[i].value) + ((parseFloat(topAttributes[i].value) - parseFloat(botAttributes[i].value)) * percent)).toFixed(2)
                                 path.setAttribute(attr.name, middleVal)
                             } else if (attr.name == 'd' || attr.name == 'points') {
                                 let keys = this.parsePath(attr.value)
@@ -375,12 +359,8 @@ class XMLSprite {
             }
             let queue = this.currentAnimation.getElementsByTagName('renderQ')[0]
             this.currentAnimation.render = []
-            // for ( let node of queue.childNodes) {
-            //     queue.removeChild(node)
-            // }
             for (let i = 0; i < parseInt(this.currentAnimation.getAttribute('length')); i++) {
                 let frame = this.clone(this.inbetweenFrame(i))
-                // queue.appendChild(frame)
                 await this.renderFrame(frame)
                     .then(render => {
                         this.currentAnimation.render.push(render)

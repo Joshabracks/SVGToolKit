@@ -48,6 +48,9 @@ function loadSprite() {
             draw([sprite])
             showTools()
             stateSelect()
+            if (sprite.currentAnimation != undefined) {
+                loadAnimation(sprite.currentAnimation)
+            }
         })
         .catch(console.log)
 }
@@ -71,10 +74,6 @@ function populateSliders(node) {
         htmGo += `stroke<input type="text" id="stroke" value="` + node.getAttribute('stroke') + `"><br>`
         idList.push('stroke')
     }
-    // if (node.getAttribute('stroke-miterlimit') != undefined) {
-    //     htmGo += `stroke-miterlimit<input type="text" id="stroke-miterlimit" value="` + node.getAttribute('stroke-miterlimit') + `"><br>`
-    //     idList.push('stroke-miterlimit')
-    // }
     if (node.getAttribute('x') != undefined) {
         htmGo += `x<input type="range" min="-1000" max="1000" value="` + node.getAttribute('x') + `" class="slider" id="x"><br>`
         idList.push('x')
@@ -127,9 +126,6 @@ function populateSliders(node) {
         htmGo += `height<input type="range" min="-1000" max="1000" value="` + node.getAttribute('height') + `" class="slider" id="height"><br>`
         idList.push('height')
     }
-    // if (!node.keyMap) {
-    //     node.keyMap = JSON.parse(node.getAttribute('keyMap'))
-    // }
     let v = false;
     if (node.getAttribute('d') != undefined) {
         v = sprite.parsePath(node.getAttribute('d'))
@@ -155,7 +151,6 @@ function populateSliders(node) {
                 let slider = document.getElementById(i)
                 slider.setAttribute('nodeId', node.id)
                 slider.oninput = function () {
-                    // USE sprite.parsePath() and sprite.buildPath() to update paths
                     let thisNode = sprite.image.getElementById(this.getAttribute('nodeId'))
                     let orig = sprite.parsePath(thisNode.getAttribute('oPath'))
                     let pathVal = parseFloat(orig[i].value) + (this.value / 2)
@@ -169,7 +164,6 @@ function populateSliders(node) {
                 }
             }
         }
-        // node.setAttribute('keyMap', JSON.stringify(node.keyMap))
     } else {
         document.getElementById('slidewrap').innerHTML = htmGo
     }
@@ -187,15 +181,6 @@ function populateSliders(node) {
 
 function resetSVG() {
     sprite.reset()
-    // for (let i = 0; i < sprite.paths[0].length; i++) {
-    //     if (sprite.paths[0][i].number) {
-    //         let slider = document.getElementById(i)
-    //         slider.value = 0
-    //         let pathVal = parseFloat(sprite.originalPaths[0][i].value) + (slider.value / 2)
-    //         sprite.paths[0][i].value = pathVal
-    //         sprite.updatePath(0)
-    //     }
-    // }
     draw([sprite])
 }
 
@@ -235,19 +220,17 @@ function loadAnimation(anim) {
     const slider = document.getElementById('animSlider')
     slider.oninput = () => {
         if (Date.now() - lastFrame > (50)) {
-            // requestAnimationFrame()
             loadFrame(slider.value)
             lastFrame = Date.now()
         }
     }
     animationSelect()
-    render = false;
-    // sprite.animFrame = 0
+    // render = false;
     slider.value = 0;
 }
 
 function reloadAnim() {
-    loadAnimation(animation)
+    loadAnimation(sprite.currentAnimation)
 }
 
 function loadFrame(ts) {
@@ -275,45 +258,7 @@ function loadFrame(ts) {
 
     let slider = document.getElementById('animSlider')
     slider.value = ts
-    // let lowFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
-    // let hiFrame = JSON.parse(JSON.stringify(animation.keyframes[0]))
-    // for (key in animation.keyframes) {
-    //     lowFrame = hiFrame
-    //     hiFrame = JSON.parse(JSON.stringify(animation.keyframes[key]))
-    //     if (ts > lowFrame.timestamp && ts < hiFrame.timestamp) {
-    //         for (i in sprite.paths) {
-    //             let path = sprite.paths[i]
-    //             for (j in path) {
-    //                 if (path[j].number) {
-    //                     let frameDiff = hiFrame.timestamp - lowFrame.timestamp
-    //                     let tsDiff = ts - lowFrame.timestamp
-    //                     let percent = parseFloat(tsDiff / frameDiff).toFixed(2)
-    //                     let diff = parseFloat(lowFrame.paths[i][j].value) + ((hiFrame.paths[i][j].value - lowFrame.paths[i][j].value) * percent)
-    //                     path[j].value = diff
-    //                 }
-    //             }
-    //             sprite.updatePath(i)
-    //         }
-    //         sprite.updateImage()
-    //         draw([sprite])
-    //     }
-    //     if (key == parseInt(ts)) {
-    //         slider.value = ts;
-    //         for (i in sprite.paths) {
-    //             sprite.paths[i] = animation.keyframes[key].paths[i]
-    //             sprite.updatePath(i)
-    //         }
-    //         sprite.updateImage()
-    //         draw([sprite])
-    //         return
-    //     }
-
-    // }
-    // render = false;
-    // playing = false;
-    // if (player) {
-    //     clearInterval(player)
-    // }
+    animatorFrame = ts
 }
 
 function addKeyFrame() {
@@ -336,6 +281,8 @@ function deleteKeyFrame() {
     }
     loadAnimation(sprite.currentAnimation)
     animationSelect()
+    document.getElementById('animSlider').value = value
+    render = false;
 }
 
 function downloadSprite() {
@@ -372,6 +319,7 @@ function animationSelect() {
 function animLoad(id) {
     sprite.currentAnimation = sprite.animations.getElementsByTagName('animation')[id]
     loadAnimation(sprite.currentAnimation)
+    render = false
 }
 
 function loadState(state) {
@@ -400,45 +348,6 @@ function renameSprite() {
     sprite.rename(document.getElementById('spriteName').value)
 }
 
-// function play() {
-//     if (render) {
-//         sprite.animFrame = document.getElementById('animSlider').value
-//         playing = true
-//         playTrue()
-//     } else {
-//         renderAnimation()
-//     }
-// }
-
-// let player;
-
-// function play() {
-//     if (render) {
-//         player = setInterval(() => {
-//             let slider = document.getElementById('animSlider')
-//             if (sprite.animFrame <= animation.render.length) {
-//                 slider.value = sprite.animFrame
-//                 sprite.animFrame++
-//                 // window.requestAnimationFrame(function () { playTrue() })
-//             } else if (sprite.animFrame > animation.render.length) {
-//                 sprite.animFrame = 0
-//                 slider.value = sprite.animFrame
-//                 // window.requestAnimationFrame(function () { playTrue() })
-//             }
-//             let blob = new Blob([animation.render[sprite.animFrame]], { type: 'image/svg+xml' })
-//             const url = window.URL.createObjectURL(blob)
-//             const image = new Image(this.width, this.height)
-//             image.src = url
-//             ctx.fillStyle = 'white';
-//             image.onload = () => {
-//                 ctx.fillRect(0, 0, width, height)
-//                 ctx.drawImage(image, sprite.x, sprite.y)
-//             }
-//         }, 1000 / 60)
-//     } else {
-//         renderAnimation()
-//     }
-// }
 let animator;
 let animatorData;
 let animatorFrame;
@@ -462,24 +371,18 @@ function player(data, length, frame = 0) {
         animator = setInterval(() => {
             nextFrame()
         }, 1000 / 60)
-        // window.requestAnimationFrame(function () { player(data, frame) })
     }
 }
 
 function play() {
     if (render) {
-        player()
+        player(animatorData, animatorLength, animatorFrame)
     } else { renderAnimation() }
 }
 
-// function playTrue() {
-//     player()
-// }
-
 function stop() {
-    // sprite.animFrame = 0
     clearInterval(animator)
-    render = false;
+    // render = false;
 }
 
 async function renderAnimation() {
@@ -525,12 +428,17 @@ function moveKey() {
     if (value == sliderVal) {
         return
     }
-    let oldKey = animation.keyframes[value]
-    let newKey = JSON.parse(JSON.stringify(oldKey))
-    newKey.timestamp = parseInt(sliderVal)
-    animation.keyframes[sliderVal] = newKey
-    delete animation.keyframes[value]
-    loadAnimation(animation)
+    let keyframes = sprite.currentAnimation.getElementsByTagName('keyFrames')[0].childNodes
+    for ( let node of keyframes) {
+        if (node.nodeName != "#text") {
+            if (node.getAttribute('frame') == value) {
+                node.setAttribute('frame', sliderVal)
+            }
+        }
+    }
+    loadAnimation(sprite.currentAnimation)
+    document.getElementById('animSlider').value = sliderVal
+    render = false
 }
 
 window.onresize = () => {
