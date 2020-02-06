@@ -469,7 +469,29 @@ function populateOverlay(node) {
             if (node.getAttribute('y') == undefined) {
                 node.setAttribute('y', 0)
             }
-            htmGo += `<div draggable="true" style="top: ` + node.getAttribute('y') + `px;left: ` + node.getAttribute('x') + `px;" ondrag="changePosition(event)" class="overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+            htmGo += `<div draggable="true" style="top: ` + node.getAttribute('y') + `px;left: ` + node.getAttribute('x') + `px;" ondrag="changePositionRect(event)" class="overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+        },
+        circle: () => {
+            if (node.getAttribute('cx') == undefined) {
+                node.setAttribute('cx', 0)
+            }
+            if (node.getAttribute('cy') == undefined) {
+                node.setAttribute('cy', 0)
+            }
+            htmGo += `<div draggable="true" style="top: ` + node.getAttribute('cy') + `px;left: ` + node.getAttribute('cx') + `px;" ondrag="changePositionCircle(event)" class="overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+        },
+        ellipse: () => {
+            if (node.getAttribute('cx') == undefined) {
+                node.setAttribute('cx', 0)
+            }
+            if (node.getAttribute('cy') == undefined) {
+                node.setAttribute('cy', 0)
+            }
+            htmGo += `<div draggable="true" style="top: ` + node.getAttribute('cy') + `px;left: ` + node.getAttribute('cx') + `px;" ondrag="changePositionCircle(event)" class="overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+        },
+        line: () => {
+            htmGo += `<div draggable="true" style="top: ` + node.getAttribute('y1') + `px;left: ` + node.getAttribute('x1') + `px;" ondrag="changePositionLine1(event)" class="overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+            htmGo += `<div draggable="true" style="top: ` + node.getAttribute('y2') + `px;left: ` + node.getAttribute('x2') + `px;" ondrag="changePositionLine2(event)" class="overlayNode" _id="` + node.getAttribute('id') + `"></div>`
         }
     }
     specifics[node.nodeName]()
@@ -482,13 +504,49 @@ document.addEventListener("dragover", function (event) {
 
 }, false);
 
-function changePosition(e) {
+function changePositionRect(e) {
     let div = e.target
     let node = sprite.image.getElementById(div.getAttribute('_id'))
     let x = e.clientX - document.getElementById('canvas').offsetLeft
     let y = e.clientY - document.getElementById('canvas').offsetTop
     node.setAttribute('x', x)
     node.setAttribute('y', y)
+    div.style.top = y + 'px'
+    div.style.left = x + 'px'
+    draw([sprite])
+}
+
+function changePositionCircle(e) {
+    let div = e.target
+    let node = sprite.image.getElementById(div.getAttribute('_id'))
+    let x = e.clientX - document.getElementById('canvas').offsetLeft
+    let y = e.clientY - document.getElementById('canvas').offsetTop
+    node.setAttribute('cx', x)
+    node.setAttribute('cy', y)
+    div.style.top = y + 'px'
+    div.style.left = x + 'px'
+    draw([sprite])
+}
+
+function changePositionLine1(e) {
+    let div = e.target
+    let node = sprite.image.getElementById(div.getAttribute('_id'))
+    let x = e.clientX - document.getElementById('canvas').offsetLeft
+    let y = e.clientY - document.getElementById('canvas').offsetTop
+    node.setAttribute('x1', x)
+    node.setAttribute('y1', y)
+    div.style.top = y + 'px'
+    div.style.left = x + 'px'
+    draw([sprite])
+}
+
+function changePositionLine2(e) {
+    let div = e.target
+    let node = sprite.image.getElementById(div.getAttribute('_id'))
+    let x = e.clientX - document.getElementById('canvas').offsetLeft
+    let y = e.clientY - document.getElementById('canvas').offsetTop
+    node.setAttribute('x2', x)
+    node.setAttribute('y2', y)
     div.style.top = y + 'px'
     div.style.left = x + 'px'
     draw([sprite])
