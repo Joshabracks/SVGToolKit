@@ -148,6 +148,7 @@ class XMLSprite {
         this.animations.appendChild(newAnimation)
         newAnimation.setAttribute('length', length)
         newAnimation.setAttribute('frame', 0)
+        newAnimation.setAttribute('currentFrame', 0)
         newAnimation.appendChild(this.xmlDoc.createElement('renderQ'))
         let keyFrames = this.xmlDoc.createElement('keyFrames')
         let keyFrameZero = this.clone(this.image)
@@ -323,7 +324,7 @@ class XMLSprite {
                                 let botKeys = this.parsePath(botAttributes[i].value)
                                 for (let i = 0; i < keys.length; i++) {
                                     if (keys[i].number) {
-                                        keys[i].value = parseFloat(botKeys[i].value) + ((parseFloat(topKeys[i].value) - parseFloat(botKeys[i].value)) * percent)
+                                        keys[i].value = parseFloat(parseFloat(botKeys[i].value) + ((parseFloat(topKeys[i].value) - parseFloat(botKeys[i].value)) * percent)).toFixed(2)
                                     }
                                     path.setAttribute(attr.name, this.buildPath(keys))
                                 }
@@ -366,5 +367,38 @@ class XMLSprite {
             path += keys[i].value
         }
         return path
+    }
+    renderQueue = async () => {
+        return new Promise(async (resolve, reject) => {
+            if (this.currentAnimation == undefined || !this.currentAnimation) {
+                return
+            }
+            let queue = this.currentAnimation.getElementsByTagName('renderQ')[0]
+            this.currentAnimation.render = []
+            // for ( let node of queue.childNodes) {
+            //     queue.removeChild(node)
+            // }
+            for (let i = 0; i < parseInt(this.currentAnimation.getAttribute('length')); i++) {
+                let frame = this.clone(this.inbetweenFrame(i))
+                // queue.appendChild(frame)
+                await this.renderFrame(frame)
+                    .then(render => {
+                        this.currentAnimation.render.push(render)
+                    })
+                    .catch(err => {return reject(err)})
+            }
+            return resolve(this.currentAnimation.render)
+        })
+    }
+    renderFrame = (frame) => {
+        return new Promise((resolve, reject) => {
+            const blob = new Blob([s.serializeToString(frame)], { type: 'image/svg+xml' })
+            const url = window.URL.createObjectURL(blob)
+            const image = new Image(parseFloat(this.image.getAttribute('width')), parseFloat(this.image.getAttribute('height')))
+            image.src = url
+            image.onload = () => {
+                return resolve(image)
+            }
+        })
     }
 }
