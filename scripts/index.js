@@ -49,7 +49,6 @@ function pathsLoader(paths) {
     let first = true
     let htmGo = ''
     for (let node of paths.childNodes) {
-        console.log(node)
         if (node.nodeName != '#text') {
             sprite.setId(node)
             htmGo += `<button onclick="populateSlidersById('` + node.getAttribute('id') + `')">` + i + `</button>`
@@ -72,7 +71,6 @@ function populateSlidersById(id) {
 }
 
 function populateSliders(node) {
-    console.log(node.nodeName)
     let htmGo = ''
     let idList = []
     if (node.getAttribute('fill') != undefined) {
@@ -492,6 +490,39 @@ function populateOverlay(node) {
         line: () => {
             htmGo += `<div draggable="true" style="top: ` + node.getAttribute('y1') + `px;left: ` + node.getAttribute('x1') + `px;" ondrag="changePositionLine1(event)" class="positionNode overlayNode" _id="` + node.getAttribute('id') + `"></div>`
             htmGo += `<div draggable="true" style="top: ` + node.getAttribute('y2') + `px;left: ` + node.getAttribute('x2') + `px;" ondrag="changePositionLine2(event)" class="positionNode overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+        },
+        polygon: () => {
+            let points = sprite.parsePath(node.getAttribute('points'))
+            let x = false;
+            let y = false;
+            let xi;
+            let yi;
+            let xTotal = 0
+            let yTotal = 0
+            let count = 0
+            for (let i = 0; i < points.length; i++) {
+                if (points[i].number) {
+                    if (!x) {
+                        x = points[i].value
+                        xi = i
+                        xTotal += parseFloat(x)
+                    } else if (!y) {
+                        y = points[i].value
+                        yi = i
+                        yTotal += parseFloat(y)
+                        htmGo += `<div draggable="true" style="top: ` + y + `px; left: ` + x + `px;" ondrag="changePoint(event)" class="positionNode overlayNode" _id="` + node.getAttribute('id') + `" _x="` + xi + `" _y="` + yi + `"></div>`
+                        x = false
+                        y = false
+                        count++
+                    }
+                }
+            }
+            x = xTotal / count
+            y = yTotal / count
+            htmGo += `<div draggable="true" style="top: ` + y + `px; left: ` + x + `px;" ondrag="changePositionPoly(event)" class="positionNodeMaster overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+        },
+        polyline: () => {
+            specifics.polygon()
         }
     }
     specifics[node.nodeName]()
@@ -511,17 +542,39 @@ function changePositionRect(e) {
     let y = e.clientY - document.getElementById('canvas').offsetTop
     node.setAttribute('x', x)
     node.setAttribute('y', y)
-    
-    for ( let box of document.getElementsByClassName('positionNode') ) {
-        if ( box != div ) {
+
+    for (let box of document.getElementsByClassName('positionNode')) {
+        if (box != div) {
             let yDif = (box.style.top.slice(0, box.style.top.length - 2) - parseFloat(div.style.top.slice(0, div.style.top.length - 2)))
-            box.style.top = ( y + yDif) + 'px'
+            box.style.top = (y + yDif) + 'px'
             let xDif = (box.style.left.slice(0, box.style.left.length - 2) - parseFloat(div.style.left.slice(0, div.style.left.length - 2)))
-            box.style.left = ( x + xDif) + 'px'
+            box.style.left = (x + xDif) + 'px'
         }
     }
     div.style.top = y + 'px'
     div.style.left = x + 'px'
+    draw([sprite])
+}
+
+function changePositionPoly(e) {
+    let div = e.target
+    let node = sprite.image.getElementById(div.getAttribute('_id'))
+    let points = sprite.parsePath(node.getAttribute('points'))
+    let x = e.clientX - document.getElementById('canvas').offsetLeft
+    let y = e.clientY - document.getElementById('canvas').offsetTop
+    for (let box of document.getElementsByClassName('positionNode')) {
+        let yDif = (box.style.top.slice(0, box.style.top.length - 2) - parseFloat(div.style.top.slice(0, div.style.top.length - 2)))
+        box.style.top = (y + yDif) + 'px'
+        let xDif = (box.style.left.slice(0, box.style.left.length - 2) - parseFloat(div.style.left.slice(0, div.style.left.length - 2)))
+        box.style.left = (x + xDif) + 'px'
+        let _x = box.getAttribute('_x')
+        let _y = box.getAttribute('_y')
+        points[_x].value = parseFloat(parseFloat(x) + parseFloat(xDif))
+        points[_y].value = parseFloat(parseFloat(y) + parseFloat(yDif))
+    }
+    div.style.left = x + 'px'
+    div.style.top = y + 'px'
+    node.setAttribute('points', sprite.buildPath(points))
     draw([sprite])
 }
 
@@ -532,12 +585,12 @@ function changePositionCircle(e) {
     let y = e.clientY - document.getElementById('canvas').offsetTop
     node.setAttribute('cx', x)
     node.setAttribute('cy', y)
-    for ( let box of document.getElementsByClassName('positionNode') ) {
-        if ( box != div ) {
+    for (let box of document.getElementsByClassName('positionNode')) {
+        if (box != div) {
             let yDif = (box.style.top.slice(0, box.style.top.length - 2) - parseFloat(div.style.top.slice(0, div.style.top.length - 2)))
-            box.style.top = ( y + yDif) + 'px'
+            box.style.top = (y + yDif) + 'px'
             let xDif = (box.style.left.slice(0, box.style.left.length - 2) - parseFloat(div.style.left.slice(0, div.style.left.length - 2)))
-            box.style.left = ( x + xDif) + 'px'
+            box.style.left = (x + xDif) + 'px'
         }
     }
     div.style.top = y + 'px'
@@ -613,6 +666,22 @@ function changeHeightEllipse(e) {
     let y = e.clientY - document.getElementById('canvas').offsetTop
     node.setAttribute('ry', y - (parseFloat(node.getAttribute('cy'))))
     div.style.top = y + 'px'
+    draw([sprite])
+}
+
+function changePoint(e) {
+    let div = e.target
+    let node = sprite.image.getElementById(div.getAttribute('_id'))
+    let points = sprite.parsePath(node.getAttribute('points'))
+    let x = e.clientX - document.getElementById('canvas').offsetLeft
+    let y = e.clientY - document.getElementById('canvas').offsetTop
+    let _x = div.getAttribute('_x')
+    let _y = div.getAttribute('_y')
+    div.style.top = y + 'px'
+    div.style.left = x + 'px'
+    points[_x].value = x
+    points[_y].value = y
+    node.setAttribute('points', sprite.buildPath(points))
     draw([sprite])
 }
 

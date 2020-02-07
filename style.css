@@ -164,6 +164,15 @@ button:active {
     
 }
 
+.positionNodeMaster {
+    width: 5px;
+    height: 5px;
+    background-color: red;
+    outline-color: white;
+    outline-width: 1px;
+    outline-style: solid;
+}
+
 .positionNode {
     width: 5px;
     height: 5px;
