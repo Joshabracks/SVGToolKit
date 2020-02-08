@@ -523,7 +523,194 @@ function populateOverlay(node) {
         },
         polyline: () => {
             specifics.polygon()
-        }
+        },
+        path: () => {
+            let absolutes = {
+                M: 'M',
+                L: 'L',
+                H: 'H',
+                V: 'V',
+                Z: 'Z',
+                C: 'C',
+                S: 'S',
+                Q: 'Q',
+                T: 'T',
+                A: 'A'
+            }
+            let relatives = {
+                m: 'm',
+                l: 'l',
+                h: 'h',
+                v: 'v',
+                z: 'z',
+                c: 'c',
+                s: 's',
+                q: 'q',
+                t: 't',
+                a: 'a'
+            }
+            let mode = 'absolute'
+            let points = sprite.parsePath(node.getAttribute('d'))
+            console.log(points)
+            let x = 0;
+            let y = 0;
+            let X;
+            let Y;
+            let xi;
+            let yi;
+            let xer = false;
+            let yer = false;
+            let xTotal = 0
+            let yTotal = 0
+            let count = 0
+            for (let i = 0; i < points.length; i++) {
+                if (points[i].number) {
+                    if (!xer) {
+                        xer = true
+                        xi = i
+                        if (mode == 'absolute') {
+                            x = parseFloat(points[i].value)
+                        } else {
+                            x = X + parseFloat(points[i].value)
+                        }
+                        xTotal += x
+                    } else if (!yer) {
+                        if (mode == 'absolute') {
+                            y = parseFloat(points[i].value)
+                        } else {
+                            y = Y + parseFloat(points[i].value)
+                        }
+                        yi = i
+                        yTotal += parseFloat(y)
+                        console.log(x, y)
+                        htmGo += `<div draggable="true" style="top: ` + y + `px; left: ` + x + `px;" ondrag="changePathPoint(event)" class="positionNode overlayNode" _id="` + node.getAttribute('id') + `" _x="` + xi + `" _y="` + yi + `"></div>`
+                        xer = false
+                        yer = false
+                        count++
+                    }
+                }
+                if (absolutes[points[i].value]) {
+                    X = x
+                    Y = y
+                    mode = 'absolute'
+                } else if (relatives[points[i].value]) {
+                    console.log('relative')
+                    mode = 'relative'
+                    X = x
+                    Y = y
+                }
+            }
+            x = xTotal / count
+            y = yTotal / count
+            htmGo += `<div draggable="true" style="top: ` + y + `px; left: ` + x + `px;" ondrag="changePositionPath(event)" class="positionNodeMaster overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+        },
+        // path: () => {
+        //     let points = sprite.parsePath(node.getAttribute('d'))
+        //     let x = false;
+        //     let y = false;
+        //     let xi;
+        //     let yi;
+        //     let xTotal = 0
+        //     let yTotal = 0
+        //     let count = 0
+        //     let xs = points[1].value
+        //     let ys = points[3].value
+        //     for (let i = 0; i < points.length; i++) {
+        //         if (points[i].number) {
+        //             if (!x) {
+        //                 x += points[i].value
+        //                 xi = i
+        //                 xTotal += parseFloat(x)
+        //             } else if (!y) {
+        //                 y += points[i].value
+        //                 yi = i
+        //                 yTotal += parseFloat(y)
+        //                         if (i > 3) {
+        //                         }
+        //                 htmGo += `<div draggable="true" style="top: ` + (parseFloat(y) + parseFloat(ys)) + `px; left: ` + (parseFloat(x) + parseFloat(xs)) + `px;" ondrag="changePathPoint(event)" class="positionNode overlayNode" _id="` + node.getAttribute('id') + `" _x="` + xi + `" _y="` + yi + `"></div>`
+        //                 x = false
+        //                 y = false
+        //                 count++
+        //             }
+        //         }
+        //     }
+        //     x = xTotal / count
+        //     y = yTotal / count
+        //     htmGo += `<div draggable="true" style="top: ` + (parseFloat(y) + parseFloat(ys)) + `px; left: ` + (parseFloat(x) + parseFloat(xs)) + `px;" ondrag="changePositionPath(event)" class="positionNodeMaster overlayNode" _id="` + node.getAttribute('id') + `"></div>`
+        // }
+        // path: () => {
+        //     let m = {}
+        //     let points = sprite.parsePath(node.getAttribute('d'))
+        //     let command;
+        //     let start;
+        //     let parameters = []
+        //     let options = {}
+        //     for (let i = 0; i < points.length; i++) {
+        //         let box = points[i]
+        //         if (!box.number) {
+        //             if (box.value == 'M') {
+        //                 command = 'moveto'
+        //             }
+        //             if (box.value == 'c' || box.value == 'C') {
+        //                 command = 'curve'
+        //             }
+
+        //         } else {
+        //             if (command == 'moveto') {
+        //                 if (!m.x) {
+        //                     m.x = box.value
+        //                     m.xPointer = i
+        //                 } else {
+        //                     m.y = box.value
+        //                     m.yPointer = i
+        //                     command = false
+        //                     htmGo += specifics.moveTo(m)
+        //                 }
+        //             } else if (command == 'curve') {
+        //                 if (!options.x1) {
+        //                     options.x1 = box.value
+        //                     options.x1Pointer = i
+        //                 } else if (!options.y1) {
+        //                     options.y1 = box.value
+        //                     options.y1Pointer = i
+        //                 } else if (!options.x2) {
+        //                     options.x2 = box.value
+        //                     options.x2Pointer = i
+        //                 } else if (!options.y2) {
+        //                     options.y2 = box.value
+        //                     options.y2Pointer = i
+        //                 } else if (!options.x) {
+        //                     options.x = box.value
+        //                     options.xPointer = i
+        //                 } else if (!options.y) {
+        //                     options.y = box.value
+        //                     options.yPointer = i
+        //                     htmGo += specifics.curve(options, m)
+        //                     options = {}
+        //                     command = false
+        //                 }
+        //             } else if (command == false) {
+        //                 if (!options.x) {
+        //                     options.x = box.value
+        //                 } else if (!options.y) {
+        //                     options.y = box.value-
+        //                     htmGo = point(options)
+        //                     options = false
+        //                     command = false
+        //                 }
+        //             }
+        //         }
+        //     }
+        // },
+        // curve: (options, m) => {
+        //     options.x1 += m.x
+        //     options.x2 += m.x
+        //     options.x += m.x
+        //     options.y1 += m.y
+        //     options.y2 += m.y
+        //     options.y += m.y
+        // }
+
     }
     specifics[node.nodeName]()
     document.getElementById('overlay').innerHTML = htmGo
@@ -575,6 +762,30 @@ function changePositionPoly(e) {
     div.style.left = x + 'px'
     div.style.top = y + 'px'
     node.setAttribute('points', sprite.buildPath(points))
+    draw([sprite])
+}
+
+function changePositionPath(e) {
+    let div = e.target
+    let node = sprite.image.getElementById(div.getAttribute('_id'))
+    let points = sprite.parsePath(node.getAttribute('d'))
+    let x = e.clientX - document.getElementById('canvas').offsetLeft
+    let y = e.clientY - document.getElementById('canvas').offsetTop
+    for (let box of document.getElementsByClassName('positionNode')) {
+        let yDif = (box.style.top.slice(0, box.style.top.length - 2) - parseFloat(div.style.top.slice(0, div.style.top.length - 2)))
+        box.style.top = (y + yDif) + 'px'
+        let xDif = (box.style.left.slice(0, box.style.left.length - 2) - parseFloat(div.style.left.slice(0, div.style.left.length - 2)))
+        box.style.left = (x + xDif) + 'px'
+        let _x = box.getAttribute('_x')
+        let _y = box.getAttribute('_y')
+        points[_x].value = parseFloat(parseFloat(x) + parseFloat(xDif))
+        console.log(points)
+        console.log(_y)
+        points[_y].value = parseFloat(parseFloat(y) + parseFloat(yDif))
+    }
+    div.style.left = x + 'px'
+    div.style.top = y + 'px'
+    node.setAttribute('d', sprite.buildPath(points))
     draw([sprite])
 }
 
@@ -682,6 +893,22 @@ function changePoint(e) {
     points[_x].value = x
     points[_y].value = y
     node.setAttribute('points', sprite.buildPath(points))
+    draw([sprite])
+}
+
+function changePathPoint(e) {
+    let div = e.target
+    let node = sprite.image.getElementById(div.getAttribute('_id'))
+    let points = sprite.parsePath(node.getAttribute('d'))
+    let x = e.clientX - document.getElementById('canvas').offsetLeft
+    let y = e.clientY - document.getElementById('canvas').offsetTop
+    let _x = div.getAttribute('_x')
+    let _y = div.getAttribute('_y')
+    div.style.top = y + 'px'
+    div.style.left = x + 'px'
+    points[_x].value = x
+    points[_y].value = y
+    node.setAttribute('d', sprite.buildPath(points))
     draw([sprite])
 }
 
