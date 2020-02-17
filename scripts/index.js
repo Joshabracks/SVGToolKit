@@ -64,9 +64,6 @@ function pathsLoader(paths) {
 
 function populateSlidersById(id) {
     let node = sprite.image.getElementById(id)
-    if (node == undefined) {
-        console.log(id)
-    }
     populateSliders(node)
 }
 
@@ -550,7 +547,8 @@ function populateOverlay(node) {
                 a: 'a'
             }
             let mode = 'absolute'
-            let points = sprite.parsePath(node.getAttribute('d'))
+            let _d = node.getAttribute('d')
+            let points = sprite.parsePath(_d)
             console.log(points)
             let x = 0;
             let y = 0;
@@ -572,6 +570,7 @@ function populateOverlay(node) {
                             x = parseFloat(points[i].value)
                         } else {
                             x = X + parseFloat(points[i].value)
+                            points[i].offsetter = X
                         }
                         xTotal += x
                     } else if (!yer) {
@@ -579,10 +578,10 @@ function populateOverlay(node) {
                             y = parseFloat(points[i].value)
                         } else {
                             y = Y + parseFloat(points[i].value)
+                            points[i].offsetter = Y
                         }
                         yi = i
                         yTotal += parseFloat(y)
-                        console.log(x, y)
                         htmGo += `<div draggable="true" style="top: ` + y + `px; left: ` + x + `px;" ondrag="changePathPoint(event)" class="positionNode overlayNode" _id="` + node.getAttribute('id') + `" _x="` + xi + `" _y="` + yi + `"></div>`
                         xer = false
                         yer = false
@@ -594,7 +593,6 @@ function populateOverlay(node) {
                     Y = y
                     mode = 'absolute'
                 } else if (relatives[points[i].value]) {
-                    console.log('relative')
                     mode = 'relative'
                     X = x
                     Y = y
@@ -779,8 +777,6 @@ function changePositionPath(e) {
         let _x = box.getAttribute('_x')
         let _y = box.getAttribute('_y')
         points[_x].value = parseFloat(parseFloat(x) + parseFloat(xDif))
-        console.log(points)
-        console.log(_y)
         points[_y].value = parseFloat(parseFloat(y) + parseFloat(yDif))
     }
     div.style.left = x + 'px'
@@ -896,6 +892,8 @@ function changePoint(e) {
     draw([sprite])
 }
 
+let waiter = false;
+
 function changePathPoint(e) {
     let div = e.target
     let node = sprite.image.getElementById(div.getAttribute('_id'))
@@ -904,11 +902,19 @@ function changePathPoint(e) {
     let y = e.clientY - document.getElementById('canvas').offsetTop
     let _x = div.getAttribute('_x')
     let _y = div.getAttribute('_y')
+    let diffY = y - parseFloat(div.style.top.slice(0, div.style.top.length - 2))
+    let diffX = x - parseFloat(div.style.left.slice(0, div.style.left.length - 2))
     div.style.top = y + 'px'
     div.style.left = x + 'px'
-    points[_x].value = x
-    points[_y].value = y
-    node.setAttribute('d', sprite.buildPath(points))
+    if (points[_x].offsetter) {
+        x += parseFloat(points[_x].offsetter)
+        y += parseFloat(points[_y].offestter)
+    }
+    points[_x].value = diffX + parseFloat(points[_x].value)
+    points[_y].value = diffY + parseFloat(points[_y].value)
+    let newPath = sprite.buildPath(points)
+    console.log(newPath)
+    node.setAttribute('d', newPath)
     draw([sprite])
 }
 
