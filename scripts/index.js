@@ -40,6 +40,7 @@ function loadSprite() {
             if (sprite.currentAnimation != undefined) {
                 loadAnimation(sprite.currentAnimation)
             }
+            toggleOverlay()
         })
         .catch(console.log)
 }
@@ -220,12 +221,14 @@ function loadAnimation(anim) {
     }
     htmGo += "</div>"
     htmGo += `<input type="range" min="0" max="` + anim.getAttribute('length') + `" value="0" class="slider" id="animSlider"></input>`
-    htmGo += `<br><button onclick='addKeyFrame()'>new key frame</button>  <button onclick='deleteKeyFrame()'>delete keyframe</button>  <button onclick="play()">play</button>  <button onclick="stop()">stop</button>  <button onclick="moveKey()">move key frame</button>`
+    htmGo += `<br><button onclick='addKeyFrame()'>new key frame</button>  <button onclick='deleteKeyFrame()'>delete keyframe</button>  <button onclick="play()">play</button>  <button onclick="stop()">stop</button>  <button onclick="moveKey()">move key frame</button>  <input id="trimmer" type="text">  <button onclick="trimLength()">trim</button>`
     footer.innerHTML = htmGo
+    document.getElementById('trimmer').setAttribute('value', anim.getAttribute('length'))
     const slider = document.getElementById('animSlider')
     slider.oninput = () => {
         if (Date.now() - lastFrame > (50)) {
             loadFrame(slider.value)
+            document.getElementById('trimmer').setAttribute('value', slider.value)
             lastFrame = Date.now()
         }
     }
@@ -395,6 +398,7 @@ async function renderAnimation() {
         .then(data => {
             // stateSelect()
             // animationSelect()
+            console.log(data)
             loadAnimation(sprite.currentAnimation)
             render = true;
             clearInterval(renderUpdate)
@@ -769,15 +773,31 @@ function changePositionPath(e) {
     let points = sprite.parsePath(node.getAttribute('d'))
     let x = e.clientX - document.getElementById('canvas').offsetLeft
     let y = e.clientY - document.getElementById('canvas').offsetTop
+    let diffY = y - parseFloat(div.style.top.slice(0, div.style.top.length - 2))
+    let diffX = x - parseFloat(div.style.left.slice(0, div.style.left.length - 2))
+    console.log(diffX, diffY)
     for (let box of document.getElementsByClassName('positionNode')) {
-        let yDif = (box.style.top.slice(0, box.style.top.length - 2) - parseFloat(div.style.top.slice(0, div.style.top.length - 2)))
+        // changePathPoint({
+        //     clientX: parseFloat(box.style.left.slice(0, box.style.left.length - 2) + diffX),
+        //     clientY: parseFloat(box.style.top.slice(0, box.style.top.length - 2) + diffY),
+        //     target: box
+        // })
+        let Y = parseFloat(box.style.top.slice(0, box.style.top.length - 2))
+        let X = parseFloat(box.style.left.slice(0, box.style.left.length - 2))
+        let yDif = (Y - parseFloat(div.style.top.slice(0, div.style.top.length - 2)))
         box.style.top = (y + yDif) + 'px'
-        let xDif = (box.style.left.slice(0, box.style.left.length - 2) - parseFloat(div.style.left.slice(0, div.style.left.length - 2)))
+        let xDif = (X - parseFloat(div.style.left.slice(0, div.style.left.length - 2)))
         box.style.left = (x + xDif) + 'px'
         let _x = box.getAttribute('_x')
         let _y = box.getAttribute('_y')
-        points[_x].value = parseFloat(parseFloat(x) + parseFloat(xDif))
-        points[_y].value = parseFloat(parseFloat(y) + parseFloat(yDif))
+        if (points[_x].offsetter) {
+            X += parseFloat(points[_x].offsetter)
+        }
+        if (points[_y].offsetter) {
+            Y += parseFloat(points[_y].offsetter)
+        }
+        points[_x].value = diffX + parseFloat(points[_x].value)
+        points[_y].value = diffY + parseFloat(points[_y].value)
     }
     div.style.left = x + 'px'
     div.style.top = y + 'px'
@@ -908,14 +928,19 @@ function changePathPoint(e) {
     div.style.left = x + 'px'
     if (points[_x].offsetter) {
         x += parseFloat(points[_x].offsetter)
-        y += parseFloat(points[_y].offestter)
+        y += parseFloat(points[_y].offsetter)
     }
     points[_x].value = diffX + parseFloat(points[_x].value)
     points[_y].value = diffY + parseFloat(points[_y].value)
     let newPath = sprite.buildPath(points)
-    console.log(newPath)
     node.setAttribute('d', newPath)
     draw([sprite])
+}
+
+function trimLength() {
+    let value = document.getElementById('trimmer').value
+    sprite.currentAnimation.setAttribute('length', value)
+    loadAnimation(sprite.currentAnimation)
 }
 
 window.onresize = () => {
@@ -925,3 +950,4 @@ window.onresize = () => {
     ctx.canvas.width = width
     draw(drawingQ)
 }
+
